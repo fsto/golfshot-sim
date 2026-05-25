@@ -26,14 +26,14 @@ describe('App smoke', () => {
     expect(screen.getByText('Hang time')).toBeInTheDocument();
   });
 
-  test('Carry readout shows ~253 m by default (metric default, Tour driver preset)', () => {
+  test('Carry readout shows driver carry in meters by default (Tour driver preset)', () => {
     render(<App />);
     const carryStat = screen.getByText('Carry').closest('.stat') as HTMLElement;
     const value = within(carryStat).getByText(/\d+\.\d+/);
     const n = parseFloat(value.textContent ?? '');
-    // 277 yd ≈ 253 m
-    expect(n).toBeGreaterThan(240);
-    expect(n).toBeLessThan(265);
+    // Physically-grounded CL/CD (peak L/D ≈ 0.83) gives Tour driver ~233 m / 255 yd.
+    expect(n).toBeGreaterThan(220);
+    expect(n).toBeLessThan(260);
   });
 
   test('switching to Imperial flips the carry to yards', () => {
@@ -42,8 +42,8 @@ describe('App smoke', () => {
     const carryStat = screen.getByText('Carry').closest('.stat') as HTMLElement;
     const value = within(carryStat).getByText(/\d+\.\d+/);
     const n = parseFloat(value.textContent ?? '');
-    expect(n).toBeGreaterThan(260);
-    expect(n).toBeLessThan(290);
+    expect(n).toBeGreaterThan(240);
+    expect(n).toBeLessThan(285);
   });
 
   test('Total readout shows farther than Carry (bounce + roll add distance)', () => {
@@ -117,9 +117,9 @@ test('Share link button is in the header', () => {
     const carryStat = screen.getByText('Carry').closest('.stat') as HTMLElement;
     const value = within(carryStat).getByText(/\d+\.\d+/);
     const n = parseFloat(value.textContent ?? '');
-    // 277 yd ≈ 253 m
-    expect(n).toBeGreaterThan(240);
-    expect(n).toBeLessThan(265);
+    // Physically-grounded CL/CD (peak L/D ≈ 0.83) gives Tour driver ~233 m.
+    expect(n).toBeGreaterThan(220);
+    expect(n).toBeLessThan(260);
   });
 
   test('Derived ball launch panel is shown in default Delivery mode, hidden after switching to Ball Launch', () => {

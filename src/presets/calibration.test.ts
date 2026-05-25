@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { simulateShot } from '../physics/shot';
 import { cToK, mToYd } from '../physics/units';
 import { presetList } from './pgaPresets';
-import type { EnvConditions } from '../physics/types';
+import type { ClubId, EnvConditions } from '../physics/types';
 
 const ISA: EnvConditions = {
   tempK: cToK(15), pressurePa: 101325, humidityPct: 0,
@@ -12,18 +12,40 @@ const ISA: EnvConditions = {
 /**
  * Each preset's neutral delivery should produce its documented tour-avg carry within tolerance.
  *
- * The smooth global Cd/Cl formulas (Smits-Smith-style exponential lift, quadratic drag in S)
- * fit Driver / 7i / PW within ±4% but over-shoot mid-irons by ~10–15% because the model can't
- * resolve the non-monotonic L/D relationship in the S ∈ [0.15, 0.25] range. M8 will replace
- * the formulas with a table interpolated from Bearman & Harvey / Smits & Smith raw data points,
- * which should bring all clubs within 3%. For now this guards against regression at a looser
- * envelope.
+ * Per-club tolerance is tiered:
+ *
+ *   - Mid-irons (3i, 4i, 5i, 6i) + woods (3W, 5W): ±6%
+ *     Previously these missed by 9–15% under the closed-form CL/CD; with the table-interpolated
+ *     aero coefficients (peak L/D ≈ 0.83, matching Bearman/Aoki) they now sit within ±5%.
+ *
+ *   - Driver, long-irons (7i, 8i, 9i), pitching wedge: ±12%
+ *     These under-shoot Tour aggregates by 7–11% because the preset's stored Tour-avg launch
+ *     angles for irons are 2.7–4.2° HIGHER than current Trackman PGA-Tour averages (e.g. the
+ *     preset stores 7i launch=19.4° vs Trackman 2019 PGA=16.3°). The old physics compensated
+ *     via over-lift; correcting the physics exposes the stale launch numbers. Refreshing the
+ *     preset `tourAvg.launchDeg` for irons is a follow-up — see PR notes.
  */
-const TOLERANCE = 0.18;
+const TOLERANCE_BY_CLUB: Record<ClubId, number> = {
+  driver: 0.12,
+  '3w':   0.06,
+  '5w':   0.06,
+  '3i':   0.06,
+  '4i':   0.06,
+  '5i':   0.06,
+  '6i':   0.06,
+  '7i':   0.12,
+  '8i':   0.12,
+  '9i':   0.12,
+  pw:     0.12,
+  gw:     0.15,
+  sw:     0.15,
+  lw:     0.15,
+};
 
 describe('preset calibration: neutral delivery → tour-avg carry', () => {
   for (const preset of presetList) {
-    test(`${preset.label} carries ${(mToYd(preset.tourAvg.carryM)).toFixed(0)} yd ±${TOLERANCE * 100}%`, () => {
+    const tol = TOLERANCE_BY_CLUB[preset.id];
+    test(`${preset.label} carries ${(mToYd(preset.tourAvg.carryM)).toFixed(0)} yd ±${(tol * 100).toFixed(0)}%`, () => {
       const result = simulateShot(
         {
           mode: 'delivery',
@@ -38,12 +60,13 @@ describe('preset calibration: neutral delivery → tour-avg carry', () => {
       );
       const target = preset.tourAvg.carryM;
       const rel = Math.abs(result.carryM - target) / target;
-      if (rel > TOLERANCE) {
+      if (rel > tol) {
         throw new Error(
           `${preset.label}: ${mToYd(result.carryM).toFixed(1)} yd vs target ${mToYd(target).toFixed(1)} yd ` +
-          `(rel err ${(rel * 100).toFixed(2)}%)`,
+          `(rel err ${(rel * 100).toFixed(2)}%, allowed ${(tol * 100).toFixed(0)}%)`,
         );
       }
+      expect(rel).toBeLessThanOrEqual(tol);
     });
   }
 });

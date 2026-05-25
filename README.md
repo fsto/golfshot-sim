@@ -1,65 +1,52 @@
 # Golfshot Sim
 
-A browser-only, physics-accurate golf shot simulator. Enter Trackman-style launch monitor
-inputs, see the ball flight, bounce and roll out in 3D, side-profile and top-down.
+Browser-only, physics-accurate golf shot simulator. Enter Trackman-style launch monitor
+inputs, watch the ball fly, bounce and roll out in 3D + side-profile + top-down.
 
 **Live demo:** https://fsto.github.io/golfshot-sim/
 
-No backend. No accounts. The full physics + UI ships as a static bundle; everything runs
-in your browser.
+No backend, no accounts — the full physics + UI ships as a static bundle.
 
-## What it does
+## Features
 
-- **Two input modes**, toggled at the top of the page:
-  - **Club Delivery** (default) — clubhead speed, smash factor, attack angle, club path,
-    face angle, dynamic loft. The D-plane model derives ball-launch from these.
-  - **Ball Launch** — radar-style ball speed, launch angle, azimuth, backspin, spin axis.
+- **Two input modes**: *Club Delivery* (clubhead speed, smash factor, attack, path, face,
+  dynamic loft — D-plane derives ball launch) or *Ball Launch* (radar-style ball speed,
+  launch, azimuth, backspin, spin axis).
 - **11 PGA Tour club presets** (Driver → PW) anchored to published ShotLink averages. Each
-  preset's "neutral" delivery reproduces its documented tour-average ball launch exactly
-  through the D-plane.
-- **Smash factor as a per-strike variable** — slider in the Club Delivery form with a hard
-  cap at the preset's tour-average ("perfect") smash. You can be less efficient than
-  perfect, never more.
-- **Full environment panel** — temperature, pressure, humidity, altitude, wind speed and
-  direction, landing surface (Green / Fairway / Rough).
-- **3D driving range** (react-three-fiber + Three.js) with a 35-unit fairway lane,
-  distance markers laid flat on the turf, sky shader, free-orbit camera (drag rotates,
-  scroll zooms, right-click pans, arrow keys pan).
-- **Side-profile and top-down 2D plots** (Recharts), both maintained at 1 : 1 data aspect
-  so the trajectory shape is truthful rather than stretched.
-- **Shot history (up to 10)** — every saved shot draws as a dimmed colored trace in all
-  three views, with a chip in the history panel showing total distance.
-- **Monte-Carlo dispersion** — per-field σ on the relevant inputs, N=10..500 runs in a
-  Web Worker, render the landing cloud + 95 % covariance ellipse on the turf and a scatter
-  in the top-down plot. The readout switches to mean ± σ for carry/total/side while a
-  result is active.
-- **Shareable URL** — Copy Link snapshots the full input state into the URL hash and
-  rehydrates on load. Send a link to a peer and they see your exact shot.
-- **Units toggle** — Imperial / Metric for distances and temperatures (Trackman convention:
-  club / ball / wind speed always in mph).
-- **Mobile-friendly** — input panels stack under the visualizations on narrow screens.
+  preset's neutral delivery reproduces its tour-average ball launch through the D-plane.
+- **Smash factor** as a per-strike variable, hard-capped at the preset's tour-average.
+- **Full environment**: temperature, pressure, humidity, altitude, wind, surface
+  (Green / Fairway / Rough).
+- **3D driving range** (react-three-fiber) with free-orbit camera + **side-profile and
+  top-down 2D plots** (Recharts) at 1 : 1 data aspect.
+- **Shot history** up to 10 — every saved shot draws as a dimmed trace in all three views.
+- **Monte-Carlo dispersion** — per-field σ, N = 10–500 runs in a Web Worker, landing
+  cloud + 95 % covariance ellipse on the turf.
+- **Shareable URL** — full input state snapshots into the URL hash.
+- **Imperial / Metric** toggle. **Mobile-friendly** layout.
 
-## Physics, briefly
+## Physics
 
-All physics is SI-internal in `src/physics/**`. Conversions happen at module boundaries.
+SI-internal in `src/physics/**`. Conversions at module boundaries only.
 
 ### Flight
 
 3-DoF point-mass with drag + Magnus lift + gravity, integrated with classical RK4 at
-dt = 2 ms. Ground crossing is linearly interpolated within the last step.
+dt = 2 ms. Ground crossing linearly interpolated within the last step.
 
 ```
 F = ½ ρ A |v_rel|² [ −C_d v̂_rel  +  C_l (ŝ × v̂_rel) ]  +  m g
 v_rel = v − v_wind
+S     = ω·R / |v_rel|
 ```
 
-- **Lift coefficient** `C_L(S) = 0.30 · (1 − exp(−10·S))`
-- **Drag coefficient** `C_D(S) = 0.24 + 0.30·S²`
-- **Spin ratio** `S = ω·R / |v_rel|`
+**CL(S) and CD(S)** are a 12-point piecewise-linear table stitched from Bearman & Harvey
+(1976, S ≤ 0.25), Smits & Smith (1994), and Aoki et al. (2010, including the non-monotonic
+CL decline at S > 0.5). Peak L/D ≈ 0.83 at S ≈ 0.25, matching Bearman's reported ~0.78.
+See `src/physics/aero.ts`.
 
-Saturating-exponential lift + quadratic-spin drag fit to Smits & Smith (1994) and
-Bearman & Harvey (1976) wind-tunnel data. Spin decays exponentially with τ = 35 s
-(Tavares-style). Air density via ISA + Arden Buck humidity correction.
+Spin decays exponentially with τ = 35 s (Tavares-style). Air density via ISA + Arden Buck
+humidity correction.
 
 ### Club → ball (D-plane)
 
@@ -75,12 +62,9 @@ backspin        = tourAvg.spin × (1 + 0.07·ΔspinLoft) × ballSpeed/avg.ballSp
 
 ### Bounce + roll
 
-Penner (2002) — single rigid-body impact with sliding friction acting opposite to the
-contact-patch slip velocity (`ω × r` against the downward radius). Up to 6 bounces with
-secondary flight arcs between them, then a straight-line roll with rolling friction
-`μ_roll · g · v̂` until the ball stops.
-
-Surface defaults (calibrated from Penner + launch-monitor publications):
+Penner (2002) — rigid-body impact with sliding friction along the contact-patch slip
+velocity. Up to 6 bounces with secondary flight arcs, then straight-line roll under
+rolling friction `μ_roll · g · v̂` until the ball stops.
 
 | Surface  | COR  | μ_slide | μ_roll | spinRetention |
 |---------:|:----:|:-------:|:------:|:-------------:|
@@ -90,17 +74,14 @@ Surface defaults (calibrated from Penner + launch-monitor publications):
 
 ### Calibration
 
-Every preset's neutral delivery is run through `simulateShot` against a calibration test
-at sea-level ISA, no wind:
+Each preset's neutral delivery is gated against tour-average **carry** at sea-level ISA
+(`src/presets/calibration.test.ts`) and against tour-published **apex height, hang time,
+and descent angle** (`src/presets/trajectory.test.ts`). The trajectory-shape gates catch
+regressions like "carry happens to match but the ball flies wrong" — the failure mode
+that hid the old over-lifting CL/CD.
 
-- Driver / 7i / PW / 8i / 9i within ±4 % of their tour-average carry
-- 3W / 5W / 3i / 4i / 5i / 6i within ±15 % (mid-S regime; documented limitation —
-  see `src/presets/calibration.test.ts` for the long form)
-
-The mid-iron drift is the cost of fitting all clubs with a single global Cd/Cl formula
-rather than a (Re, S) interpolation table. The plan note: replace the closed-form
-coefficients with a table interpolated from Bearman/Smits raw data points and bring
-every club within 3 %.
+Current carry residuals: woods + mid-irons (3W, 5W, 3i–6i) within ±6 % (mid-irons ±3 %);
+driver and long-irons/wedges within ±12 % — see *Known limitations*.
 
 ## Stack
 
@@ -108,71 +89,26 @@ every club within 3 %.
   `noUncheckedIndexedAccess`)
 - **Three.js** + **react-three-fiber** + **drei** for the 3D scene
 - **Recharts v3** for the 2D plots
-- **Zustand v5** for state (three stores: shot inputs, history, dispersion result)
-- **Web Worker** (Vite module-worker URL import) for the Monte-Carlo runs
+- **Zustand v5** for state (shot inputs, history, dispersion result)
+- **Web Worker** for the Monte-Carlo runs
 - **Vitest** + **@testing-library/react** + **jsdom** for tests
 
-## Project structure
+## Project layout
 
 ```
 src/
-  physics/                Pure, SI-internal, no React / Three.js / Zustand
-    constants.ts            G, ball mass + radius, ISA constants
-    types.ts                Vec3, ShotInput, EnvConditions, ShotResult, ClubPreset, …
-    units.ts                mph↔m/s, yd↔m, rpm↔rad/s, °F↔°C, inHg↔Pa, …
-    atmosphere.ts           airDensity(env), isaPressure(h)
-    aero.ts                 cd(S), cl(S), spinRatio, reynoldsNumber
-    spin.ts                 decaySpin, SPIN_DECAY_TAU_S
-    integrator.ts           classical RK4 over Kinematic state
-    forces.ts               drag + Magnus + gravity (+ optional Coriolis hook)
-    coriolis.ts             −2 Ω × v, north-aimed local frame
-    flight.ts               simulateFlight + simulateFlightFromState (ground-crossing interp)
-    bounce.ts               Penner impulse
-    roll.ts                 straight-line roll under rolling friction
-    dplane.ts               clubToBall(delivery, preset)
-    dispersion.ts           batch perturbed simulateShot
-    shot.ts                 simulateShot — top-level entry; runs flight → bounce loop → roll
-
-  presets/
-    pgaPresets.ts           14 clubs with neutralDelivery + tourAvg
-    surfaces.ts             COR / friction / spinRetention / rollFriction per Surface
-    calibration.test.ts     every preset's neutral delivery vs its carry target
-
-  state/                  Zustand stores — no Three.js, no DOM
-    shotStore.ts            inputs + env + dispersion config; setMode/setUnits/setClub/…
-    historyStore.ts         saved shots with palette colors
-    dispersionStore.ts      lazy-init the worker, expose result/running
-
-  hooks/
-    useTrajectory.ts        debounce-free memoized simulateShot
-
-  workers/
-    dispersion.worker.ts    postMessage shell over simulateDispersion
-
-  lib/
-    math/vec3.ts, stats.ts, rng.ts
-    format.ts               display-space ↔ SI converters per units mode
-    shareState.ts           encode/decode/applyShareState for the URL hash
-    useElementSize.ts       ResizeObserver hook for the 1:1 chart aspect
-
-  ui/
-    App.tsx, main.tsx, styles.css
-    controls/               NumericField, UnitsToggle, ModeToggle, SurfacePicker,
-                            SaveShotButton, ShareLinkButton
-    panels/                 BallLaunchForm, ClubDeliveryForm, PresetPicker,
-                            DerivedLaunchPanel, EnvPanel, DispersionPanel,
-                            ReadoutPanel, HistoryPanel
-    plots/                  SideProfilePlot, TopDownPlot
-    scene/                  Scene, DrivingRange, BallTrace, GhostTrace, DispersionMarks
+  physics/        Pure, SI-internal. cd/cl, RK4, forces, dplane, bounce, roll, shot
+  presets/        pgaPresets, surfaces, calibration + trajectory tests
+  state/          Zustand stores (no Three, no DOM)
+  hooks/          useTrajectory
+  workers/        dispersion.worker.ts
+  lib/            math/vec3, stats, rng; format, shareState, useElementSize
+  ui/             App + controls + panels + plots + scene
 ```
 
-### Isolation rules
-
-- `physics/**`: no `react`, no `three`, no `zustand`
-- `state/**`: imports `physics/types` + `lib/**`; never calls `simulateShot` directly
-- `ui/plots/**` and `ui/panels/**`: no `three`
-- `ui/scene/**`: no `recharts`
-- `workers/**`: only `physics/**` (keeps the worker bundle small + portable)
+**Isolation rules**: `physics/**` has no React/Three/Zustand; `state/**` never calls
+`simulateShot` directly; `ui/plots/**` + `ui/panels/**` import no Three; `ui/scene/**`
+imports no Recharts; `workers/**` import only `physics/**`.
 
 ## Getting started
 
@@ -184,65 +120,52 @@ npm run typecheck    # tsc --noEmit
 npm run build        # tsc --noEmit && vite build → dist/
 ```
 
-## Deployment
-
-Pushed commits to `main` auto-deploy to GitHub Pages via
-[.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml). Production
-builds use `base: '/golfshot-sim/'` (configured conditionally in
-[vite.config.ts](vite.config.ts)) so asset URLs resolve under the project sub-path.
-
-If you fork: enable Pages with workflow source via
-```
-gh api -X POST /repos/<you>/<your-fork>/pages -f build_type=workflow
-```
-and update `base` in `vite.config.ts`. For a custom domain or root deployment, set
-`base: '/'`.
-
 ## Testing
 
 ```bash
 npm test                                    # all
 npx vitest run src/physics/                 # just physics
-npx vitest run src/presets/calibration      # preset carry calibration
+npx vitest run src/presets/                 # carry + trajectory calibration
 npx vitest run src/ui/App.test.tsx          # end-to-end smoke through jsdom
 ```
 
-The App test mocks `./scene/Scene` because jsdom has no WebGL. Everything else is real.
+The App test mocks `./scene/Scene` (jsdom has no WebGL). Everything else is real.
+**231 tests, ~6 s** for the full suite.
 
-Current size: **183 tests**, **~6 s** for the full suite.
+## Deployment
 
-## Bundle
+Pushes to `main` auto-deploy to GitHub Pages via
+[.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml). Production
+builds use `base: '/golfshot-sim/'` (set in [vite.config.ts](vite.config.ts)).
 
-`npm run build` produces ~480 KB main gzipped + ~11 KB worker gzipped. Three.js + drei
-account for most of the main chunk.
+To fork: enable Pages with workflow source via
+```
+gh api -X POST /repos/<you>/<your-fork>/pages -f build_type=workflow
+```
+and update `base` in `vite.config.ts` (use `'/'` for custom domain or root deployment).
+
+Bundle: `npm run build` produces ~480 KB main gzipped + ~11 KB worker gzipped.
 
 ## Known limitations
 
-- Mid-iron carry (3i–6i) over-shoots its tour average by 9–15 %. Captured under a loose
-  18 % calibration envelope. Documented in `src/presets/calibration.test.ts`. Fix is a
-  Bearman/Smits 2-D table lookup (Re × S) replacing the closed-form Cd/Cl.
-- No bunker / fringe / cart-path surfaces yet; the surface picker is fairway / green /
-  rough only.
+- **Driver / 7i–PW carries under-shoot Tour aggregates by 7–11 %.** The preset
+  `tourAvg.launchDeg` for irons is 2.7–4.2° higher than current Trackman PGA-Tour
+  averages — those numbers were tuned against the prior over-lifting CL/CD via
+  compensating error. Refreshing the launch angles should bring every club within ±5 %.
+- No bunker / fringe / cart-path surfaces — only fairway / green / rough.
 - Saved shots and dispersion results don't survive page reload (only inputs do, via the
   shareable URL hash).
-- The 3D scene draws the **ground game** as a polyline on the turf instead of as
-  bouncing arcs. Real bounce heights are <1 m and would be invisible at the camera
-  distance; the side-profile plot still shows them as small bumps.
+- The 3D scene draws the ground game as a polyline on the turf rather than bouncing arcs
+  (real bounce heights are < 1 m and invisible at the camera distance; the side-profile
+  plot still shows them).
 
 ## Sources
 
-The physics is grounded in published wind-tunnel and field studies:
-
-- Bearman & Harvey, *Golf ball aerodynamics*, **Aeronautical Quarterly** 27 (1976) — Cd/Cl
-  vs Re and spin ratio for dimpled balls.
-- Smits & Smith, *A new aerodynamic model of a golf ball in flight* (1994) — saturating
-  Cl(S) relationship that the formula here is fit against.
-- Penner, *The run of a golf ball*, **Sports Engineering** (2002) — bounce + roll model.
+- Bearman & Harvey, *Golf ball aerodynamics*, **Aeronautical Quarterly** 27 (1976) —
+  CL/CD vs Re and spin ratio for dimpled balls.
+- Smits & Smith, *A new aerodynamic model of a golf ball in flight* (1994).
+- Aoki et al., *Aerodynamic characteristics and flow pattern of a golf ball with rotation*,
+  Procedia Engineering (2010) — CL/CD measurements up to S ≈ 0.5.
+- Penner, *The run of a golf ball*, **Sports Engineering** (2002) — bounce + roll.
 - Tavares et al. (1999) — exponential spin decay.
-- Trackman ShotLink PGA Tour averages — preset neutral deliveries and calibration
-  targets.
-
----
-
-Built in successive milestones M1 (physics core) through M8 (polish) with a steady TDD
-cadence — physics primitives first, presets and D-plane on top, UI layered last.
+- Trackman ShotLink PGA-Tour averages — preset neutral deliveries and calibration targets.

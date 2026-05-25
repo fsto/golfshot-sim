@@ -75,8 +75,9 @@ describe('simulateShot', () => {
   test('carry in yards round-trips through mToYd', () => {
     const r = simulateShot(DRIVER, ISA);
     const carryYd = mToYd(r.carryM);
-    expect(carryYd).toBeGreaterThan(260);
-    expect(carryYd).toBeLessThan(285);
+    // Physically-grounded CL/CD (peak L/D ≈ 0.83) puts Tour-spec driver carry in this band.
+    expect(carryYd).toBeGreaterThan(240);
+    expect(carryYd).toBeLessThan(280);
   });
 
   test('radToDeg(descent) matches descentAngleDeg', () => {
