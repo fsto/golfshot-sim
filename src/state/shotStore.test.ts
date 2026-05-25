@@ -6,10 +6,10 @@ describe('shotStore', () => {
     useShotStore.getState().reset();
   });
 
-  test('default mode is delivery and units is imperial', () => {
+  test('default mode is delivery and units is metric', () => {
     const s = useShotStore.getState();
     expect(s.mode).toBe('delivery');
-    expect(s.units).toBe('imperial');
+    expect(s.units).toBe('metric');
   });
 
   test('default ball launch input is the Tour driver preset (SI values)', () => {
@@ -32,12 +32,12 @@ describe('shotStore', () => {
     expect(env.windDirDeg).toBe(0);
   });
 
-  test('setUnits switches between imperial and metric', () => {
+  test('setUnits switches between metric and imperial', () => {
     const { setUnits } = useShotStore.getState();
-    setUnits('metric');
-    expect(useShotStore.getState().units).toBe('metric');
     setUnits('imperial');
     expect(useShotStore.getState().units).toBe('imperial');
+    setUnits('metric');
+    expect(useShotStore.getState().units).toBe('metric');
   });
 
   test('updateLaunch merges partial updates', () => {
@@ -60,10 +60,10 @@ describe('shotStore', () => {
   test('reset returns all state to defaults', () => {
     const { updateLaunch, setUnits, reset } = useShotStore.getState();
     updateLaunch({ backspinRpm: 9999 });
-    setUnits('metric');
+    setUnits('imperial');
     reset();
     expect(useShotStore.getState().launch.backspinRpm).toBe(2685);
-    expect(useShotStore.getState().units).toBe('imperial');
+    expect(useShotStore.getState().units).toBe('metric');
   });
 
   test('default delivery is the driver neutral preset', () => {

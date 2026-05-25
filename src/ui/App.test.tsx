@@ -26,8 +26,19 @@ describe('App smoke', () => {
     expect(screen.getByText('Hang time')).toBeInTheDocument();
   });
 
-  test('Carry readout shows ~275 yd by default (Tour driver preset)', () => {
+  test('Carry readout shows ~253 m by default (metric default, Tour driver preset)', () => {
     render(<App />);
+    const carryStat = screen.getByText('Carry').closest('.stat') as HTMLElement;
+    const value = within(carryStat).getByText(/\d+\.\d+/);
+    const n = parseFloat(value.textContent ?? '');
+    // 277 yd ≈ 253 m
+    expect(n).toBeGreaterThan(240);
+    expect(n).toBeLessThan(265);
+  });
+
+  test('switching to Imperial flips the carry to yards', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Imperial' }));
     const carryStat = screen.getByText('Carry').closest('.stat') as HTMLElement;
     const value = within(carryStat).getByText(/\d+\.\d+/);
     const n = parseFloat(value.textContent ?? '');

@@ -10,7 +10,7 @@ describe('share state', () => {
   test('encode → decode round-trip preserves all fields', () => {
     const store = useShotStore.getState();
     store.setMode('launch');                                 // default is delivery; verify mode flips
-    store.setUnits('metric');
+    store.setUnits('imperial');                              // default is metric; verify units flip
     store.setClub('7i');
     store.updateDelivery({ faceAngleDeg: 2, attackAngleDeg: -3.5 });
     store.updateEnv({ windSpeedMps: 4, windDirDeg: 45, surface: 'green' });
@@ -22,7 +22,7 @@ describe('share state', () => {
     // Mutate the store to confirm decode actually restores
     store.reset();
     expect(useShotStore.getState().mode).toBe('delivery');
-    expect(useShotStore.getState().units).toBe('imperial');
+    expect(useShotStore.getState().units).toBe('metric');
 
     const parsed = decodeShareState(hash);
     expect(parsed).not.toBeNull();
@@ -30,7 +30,7 @@ describe('share state', () => {
 
     const s = useShotStore.getState();
     expect(s.mode).toBe('launch');
-    expect(s.units).toBe('metric');
+    expect(s.units).toBe('imperial');
     expect(s.delivery.clubId).toBe('7i');
     expect(s.delivery.faceAngleDeg).toBe(2);
     expect(s.delivery.attackAngleDeg).toBe(-3.5);

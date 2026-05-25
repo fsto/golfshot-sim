@@ -5,11 +5,15 @@ import {
 import { useShotStore, type Units } from '../../state/shotStore';
 import { useHistoryStore } from '../../state/historyStore';
 import { useTrajectory } from '../../hooks/useTrajectory';
+import { useElementSize } from '../../lib/useElementSize';
 import type { ShotResult } from '../../physics/types';
 import {
   distanceDisplay, distanceUnit,
   shortDistanceDisplay, shortDistanceUnit,
 } from '../../lib/format';
+
+const MARGIN = { top: 10, right: 24, bottom: 28, left: 44 };
+const CHART_HEIGHT = 200;
 
 function sampleProfile(result: ShotResult, units: Units): Array<{ x: number; y: number }> {
   const flight = result.flight.samples;
@@ -30,14 +34,22 @@ function sampleProfile(result: ShotResult, units: Units): Array<{ x: number; y: 
   return out;
 }
 
-/** Height-vs-distance side profile (the "shape" of the shot). */
+/**
+ * Height-vs-distance side profile (the "shape" of the shot).
+ *
+ * Maintains 1:1 data aspect ratio: y-units-per-pixel == x-units-per-pixel. The chart height
+ * is fixed and the plot width is measured live via ResizeObserver, so the Y domain expands
+ * to match the X range scaled by (plotHeight / plotWidth). This keeps the trajectory shape
+ * truthful (real golf shots are FLAT — apex is tiny vs carry) instead of stretched to fill
+ * the plot rectangle.
+ */
 export function SideProfilePlot() {
   const units = useShotStore((s) => s.units);
   const traj = useTrajectory();
   const ghosts = useHistoryStore((s) => s.shots);
+  const [wrapRef, { width: wrapW }] = useElementSize<HTMLDivElement>();
 
   const data = useMemo(() => {
-    // Carry phase: downsampled to ~120 points
     const flight = traj.flight.samples;
     const stride = Math.max(1, Math.floor(flight.length / 120));
     const out: Array<{ x: number; carry: number | null; ground: number | null }> = [];
@@ -57,7 +69,6 @@ export function SideProfilePlot() {
         ground: shortDistanceDisplay(last.pos.y, units),
       });
     }
-    // Ground phase (bounces + roll), downsampled
     const ground = traj.rollPath;
     const gStride = Math.max(1, Math.floor(ground.length / 80));
     for (let i = 0; i < ground.length; i += gStride) {
@@ -71,16 +82,36 @@ export function SideProfilePlot() {
     return out;
   }, [traj, units]);
 
+  const xMax = useMemo(
+    () => data.reduce((m, p) => Math.max(m, p.x), 0),
+    [data],
+  );
+  const yDataMax = useMemo(
+    () =>
+      data.reduce(
+        (m, p) => Math.max(m, p.carry ?? 0, p.ground ?? 0),
+        0,
+      ),
+    [data],
+  );
+
+  // Equal-aspect Y domain: compute from measured plot dimensions
+  const plotW = Math.max(1, wrapW - MARGIN.left - MARGIN.right);
+  const plotH = Math.max(1, CHART_HEIGHT - MARGIN.top - MARGIN.bottom);
+  const aspectFromData = plotH / plotW;          // y-units / x-unit pixel ratio target
+  const yRange = xMax * aspectFromData;
+  const yDomainMax = Math.max(yRange, yDataMax * 1.1, 1);
+
   return (
-    <div className="plot">
-      <div className="plot-title">Side profile (height vs distance)</div>
-      <ResponsiveContainer width="100%" height={240}>
-        <LineChart data={data} margin={{ top: 10, right: 24, bottom: 28, left: 36 }}>
+    <div className="plot" ref={wrapRef}>
+      <div className="plot-title">Side profile (height vs distance — 1 : 1 scale)</div>
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+        <LineChart data={data} margin={MARGIN}>
           <CartesianGrid stroke="#2a2f3a" strokeDasharray="3 3" />
           <XAxis
             dataKey="x"
             type="number"
-            domain={[0, 'dataMax']}
+            domain={[0, Math.max(xMax, 1)]}
             label={{ value: `Distance (${distanceUnit(units)})`, position: 'insideBottom', offset: -10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
@@ -89,7 +120,7 @@ export function SideProfilePlot() {
           />
           <YAxis
             type="number"
-            domain={[0, 'dataMax']}
+            domain={[0, yDomainMax]}
             label={{ value: `Height (${shortDistanceUnit(units)})`, angle: -90, position: 'insideLeft', offset: 10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}

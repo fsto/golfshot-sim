@@ -1,14 +1,17 @@
 import { useMemo } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Scatter,
 } from 'recharts';
 import { useShotStore, type Units } from '../../state/shotStore';
 import { useHistoryStore } from '../../state/historyStore';
 import { useDispersionStore } from '../../state/dispersionStore';
 import { useTrajectory } from '../../hooks/useTrajectory';
+import { useElementSize } from '../../lib/useElementSize';
 import type { ShotResult } from '../../physics/types';
 import { distanceDisplay, distanceUnit } from '../../lib/format';
-import { Scatter } from 'recharts';
+
+const MARGIN = { top: 10, right: 24, bottom: 28, left: 44 };
+const CHART_HEIGHT = 200;
 
 function sampleTopDown(result: ShotResult, units: Units): Array<{ x: number; z: number }> {
   const flight = result.flight.samples;
@@ -29,12 +32,20 @@ function sampleTopDown(result: ShotResult, units: Units): Array<{ x: number; z: 
   return out;
 }
 
-/** Top-down: lateral (z) vs distance (x). Reveals draw/fade curvature. */
+/**
+ * Top-down: lateral (z) vs distance (x). Reveals draw/fade curvature.
+ *
+ * Maintains 1:1 data aspect so curvature looks like the real shot, not stretched by Recharts.
+ * Y axis is reversed: +z (player's right / fade) draws at the BOTTOM, -z (draw) at the TOP —
+ * the cartographic convention for "looking down with downrange to the right".
+ */
 export function TopDownPlot() {
   const units = useShotStore((s) => s.units);
   const traj = useTrajectory();
   const ghosts = useHistoryStore((s) => s.shots);
   const dispersion = useDispersionStore((s) => s.result);
+  const [wrapRef, { width: wrapW }] = useElementSize<HTMLDivElement>();
+
   const scatterData = useMemo(
     () =>
       dispersion?.rests.map((p) => ({
@@ -78,25 +89,33 @@ export function TopDownPlot() {
   }, [traj, units]);
 
   const totalDisplay = distanceDisplay(traj.totalM, units);
-  const yDomain: [number, number] = (() => {
-    const maxAbs = data.reduce(
+  const xMax = Math.max(totalDisplay * 1.05, 50);
+
+  // Equal-aspect Y domain: lateral range matches downrange range scaled by plot aspect.
+  const plotW = Math.max(1, wrapW - MARGIN.left - MARGIN.right);
+  const plotH = Math.max(1, CHART_HEIGHT - MARGIN.top - MARGIN.bottom);
+  const dataMaxAbsZ = Math.max(
+    1,
+    data.reduce(
       (m, p) => Math.max(m, Math.abs(p.carry ?? 0), Math.abs(p.ground ?? 0)),
-      1,
-    );
-    const padded = Math.max(maxAbs * 1.3, 8);
-    return [-padded, padded];
-  })();
+      0,
+    ),
+    ...scatterData.map((p) => Math.abs(p.z)),
+  );
+  const aspectYRange = xMax * (plotH / plotW);
+  const yHalf = Math.max(aspectYRange / 2, dataMaxAbsZ * 1.1);
+  const yDomain: [number, number] = [-yHalf, yHalf];
 
   return (
-    <div className="plot">
-      <div className="plot-title">Top-down (lateral vs distance)</div>
-      <ResponsiveContainer width="100%" height={240}>
-        <LineChart data={data} margin={{ top: 10, right: 24, bottom: 28, left: 36 }}>
+    <div className="plot" ref={wrapRef}>
+      <div className="plot-title">Top-down (lateral vs distance — 1 : 1 scale)</div>
+      <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+        <LineChart data={data} margin={MARGIN}>
           <CartesianGrid stroke="#2a2f3a" strokeDasharray="3 3" />
           <XAxis
             dataKey="x"
             type="number"
-            domain={[0, Math.max(totalDisplay * 1.05, 50)]}
+            domain={[0, xMax]}
             label={{ value: `Distance (${distanceUnit(units)})`, position: 'insideBottom', offset: -10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}

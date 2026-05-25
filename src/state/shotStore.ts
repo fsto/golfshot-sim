@@ -100,7 +100,7 @@ const DEFAULT_ENV: EnvConditions = {
 
 export const useShotStore = create<ShotStore>((set) => ({
   mode: 'delivery',
-  units: 'imperial',
+  units: 'metric',
   launch: DEFAULT_LAUNCH,
   delivery: DEFAULT_DELIVERY,
   env: DEFAULT_ENV,
@@ -135,7 +135,7 @@ export const useShotStore = create<ShotStore>((set) => ({
   reset: () =>
     set({
       mode: 'delivery',
-      units: 'imperial',
+      units: 'metric',
       launch: DEFAULT_LAUNCH,
       delivery: DEFAULT_DELIVERY,
       env: DEFAULT_ENV,
