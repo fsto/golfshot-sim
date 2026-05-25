@@ -45,21 +45,23 @@ describe('simulateShot', () => {
     expect(r.derivedLaunch).toEqual(DRIVER);
   });
 
-  test('throws for delivery mode (not implemented in M1)', () => {
-    expect(() =>
-      simulateShot(
-        {
-          mode: 'delivery',
-          clubId: 'driver',
-          clubSpeedMps: 50,
-          attackAngleDeg: 0,
-          clubPathDeg: 0,
-          faceAngleDeg: 0,
-          dynamicLoftDeg: 12,
-        },
-        ISA,
-      ),
-    ).toThrow();
+  test('delivery mode at preset neutral reproduces ball-launch mode within rounding', () => {
+    const launchResult = simulateShot(DRIVER, ISA);
+    const deliveryResult = simulateShot(
+      {
+        mode: 'delivery',
+        clubId: 'driver',
+        clubSpeedMps: mphToMps(112.08),
+        attackAngleDeg: -1.3,
+        clubPathDeg: 0,
+        faceAngleDeg: 0,
+        dynamicLoftDeg: 12.5,
+      },
+      ISA,
+    );
+    expect(deliveryResult.carryM).toBeCloseTo(launchResult.carryM, 0);
+    expect(deliveryResult.derivedLaunch.mode).toBe('launch');
+    expect(deliveryResult.derivedLaunch.ballSpeedMps).toBeCloseTo(DRIVER.ballSpeedMps, 1);
   });
 
   test('carry in yards round-trips through mToYd', () => {

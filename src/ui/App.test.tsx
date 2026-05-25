@@ -17,7 +17,7 @@ describe('App smoke', () => {
   test('renders title, input panels, readout', () => {
     render(<App />);
     expect(screen.getByText('Golfshot Sim')).toBeInTheDocument();
-    expect(screen.getByText('Ball Launch')).toBeInTheDocument();
+    expect(screen.getByText('Ball Launch', { selector: '.panel-title' })).toBeInTheDocument();
     expect(screen.getByText('Environment')).toBeInTheDocument();
     // Five readout stats
     expect(screen.getByText('Carry')).toBeInTheDocument();
@@ -43,6 +43,29 @@ describe('App smoke', () => {
     // 277 yd ≈ 253 m
     expect(n).toBeGreaterThan(240);
     expect(n).toBeLessThan(265);
+  });
+
+  test('toggling to Club Delivery shows the derived ball launch panel', () => {
+    render(<App />);
+    expect(screen.queryByText(/Derived ball launch/i)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Club Delivery' }));
+    expect(screen.getByText(/Derived ball launch/i)).toBeInTheDocument();
+    expect(screen.getByText('Club Delivery', { selector: '.panel-title' })).toBeInTheDocument();
+  });
+
+  test('selecting 7i preset in delivery mode changes derived launch angle from driver value', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Club Delivery' }));
+    // Default delivery is driver; derived launch ≈ 10.9°.
+    // Change preset to 7-iron (expected derived launch ≈ 19.4°).
+    const select = screen.getByLabelText(/Club preset/i) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: '7i' } });
+    // Find the row labelled "Launch angle" inside the derived panel and read its value
+    const launchRow = screen.getByText('Launch angle').closest('.derived-row') as HTMLElement;
+    const valueText = within(launchRow).getByText(/\d+\.\d+/).textContent ?? '';
+    const v = parseFloat(valueText);
+    expect(v).toBeGreaterThan(18);
+    expect(v).toBeLessThan(21);
   });
 
   test('reducing backspin to 0 shortens carry', () => {

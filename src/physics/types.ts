@@ -88,11 +88,20 @@ export interface ShotResult {
 export interface ClubPreset {
   id: ClubId;
   label: string;
-  smashFactor: number;
+  /** Static loft on the club face (degrees). Informational; not used in calculations directly. */
   loftDeg: number;
-  /** Reference Tour-average ball-launch numbers used both for presets and calibration tests. */
-  tourAvg: {
+  /** Efficiency factor: ballSpeed = clubSpeed × smashFactor. */
+  smashFactor: number;
+  /** Tour-average "neutral" delivery — the inputs that reproduce tourAvg ball-launch through the D-plane. */
+  neutralDelivery: {
     clubSpeedMps: number;
+    attackAngleDeg: number;
+    clubPathDeg: number;
+    faceAngleDeg: number;
+    dynamicLoftDeg: number;
+  };
+  /** Tour-average ball-launch the neutral delivery produces; used for D-plane anchoring and calibration. */
+  tourAvg: {
     ballSpeedMps: number;
     launchDeg: number;
     backspinRpm: number;

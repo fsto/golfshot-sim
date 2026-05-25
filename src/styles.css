@@ -89,6 +89,35 @@ body {
   padding: 14px 16px;
   margin-bottom: 14px;
 }
+
+.panel.derived { background: rgba(125, 211, 252, 0.04); }
+
+.derived-grid { display: grid; gap: 6px; }
+.derived-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+.derived-label { color: var(--fg-dim); }
+.derived-value {
+  font-family: var(--font-mono);
+  color: var(--fg);
+  font-size: 13px;
+}
+.derived-unit { color: var(--fg-muted); font-size: 11px; }
+
+.preset-picker { margin-bottom: 12px; }
+.preset-select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  margin-top: 2px;
+}
 .panel-title {
   margin: 0 0 10px 0;
   font-size: 11px;

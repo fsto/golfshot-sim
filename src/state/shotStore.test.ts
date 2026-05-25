@@ -65,4 +65,38 @@ describe('shotStore', () => {
     expect(useShotStore.getState().launch.backspinRpm).toBe(2685);
     expect(useShotStore.getState().units).toBe('imperial');
   });
+
+  test('default delivery is the driver neutral preset', () => {
+    const d = useShotStore.getState().delivery;
+    expect(d.mode).toBe('delivery');
+    expect(d.clubId).toBe('driver');
+    expect(d.dynamicLoftDeg).toBe(12.5);
+    expect(d.attackAngleDeg).toBe(-1.3);
+  });
+
+  test('setClub replaces delivery with that preset\'s neutral inputs', () => {
+    const { setClub } = useShotStore.getState();
+    setClub('7i');
+    const d = useShotStore.getState().delivery;
+    expect(d.clubId).toBe('7i');
+    expect(d.dynamicLoftDeg).toBe(24.7);
+    expect(d.attackAngleDeg).toBe(-4.0);
+  });
+
+  test('updateDelivery merges patches and preserves clubId', () => {
+    const { updateDelivery } = useShotStore.getState();
+    updateDelivery({ faceAngleDeg: 3, clubPathDeg: -2 });
+    const d = useShotStore.getState().delivery;
+    expect(d.faceAngleDeg).toBe(3);
+    expect(d.clubPathDeg).toBe(-2);
+    expect(d.clubId).toBe('driver'); // unchanged
+    expect(d.dynamicLoftDeg).toBe(12.5);
+  });
+
+  test('setMode toggles which input drives the shot', () => {
+    const { setMode } = useShotStore.getState();
+    expect(useShotStore.getState().mode).toBe('launch');
+    setMode('delivery');
+    expect(useShotStore.getState().mode).toBe('delivery');
+  });
 });
