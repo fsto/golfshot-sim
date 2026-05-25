@@ -192,6 +192,40 @@ body {
   padding: 0 4px;
 }
 .chip-remove:hover { color: var(--fg); }
+
+.dispersion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+.dispersion-error {
+  color: #f87171;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.dispersion-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.summary-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.summary-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--fg);
+}
 .panel-title {
   margin: 0 0 10px 0;
   font-size: 11px;

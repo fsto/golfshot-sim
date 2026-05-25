@@ -3,6 +3,7 @@ import { OrbitControls, Sky } from '@react-three/drei';
 import { DrivingRange } from './DrivingRange';
 import { BallTrace } from './BallTrace';
 import { GhostTrace } from './GhostTrace';
+import { DispersionMarks } from './DispersionMarks';
 
 export function Scene() {
   return (
@@ -38,6 +39,7 @@ export function Scene() {
 
         <DrivingRange />
         <GhostTrace />
+        <DispersionMarks />
         <BallTrace />
 
         <OrbitControls

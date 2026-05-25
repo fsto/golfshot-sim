@@ -4,9 +4,11 @@ import {
 } from 'recharts';
 import { useShotStore, type Units } from '../../state/shotStore';
 import { useHistoryStore } from '../../state/historyStore';
+import { useDispersionStore } from '../../state/dispersionStore';
 import { useTrajectory } from '../../hooks/useTrajectory';
 import type { ShotResult } from '../../physics/types';
 import { distanceDisplay, distanceUnit } from '../../lib/format';
+import { Scatter } from 'recharts';
 
 function sampleTopDown(result: ShotResult, units: Units): Array<{ x: number; z: number }> {
   const flight = result.flight.samples;
@@ -32,6 +34,15 @@ export function TopDownPlot() {
   const units = useShotStore((s) => s.units);
   const traj = useTrajectory();
   const ghosts = useHistoryStore((s) => s.shots);
+  const dispersion = useDispersionStore((s) => s.result);
+  const scatterData = useMemo(
+    () =>
+      dispersion?.rests.map((p) => ({
+        x: distanceDisplay(p.x, units),
+        z: distanceDisplay(p.z, units),
+      })) ?? [],
+    [dispersion, units],
+  );
 
   const data = useMemo(() => {
     const flight = traj.flight.samples;
@@ -122,6 +133,9 @@ export function TopDownPlot() {
               isAnimationActive={false}
             />
           ))}
+          {scatterData.length > 0 && (
+            <Scatter data={scatterData} fill="#facc15" fillOpacity={0.6} dataKey="z" />
+          )}
           <Line
             type="monotone"
             dataKey="carry"

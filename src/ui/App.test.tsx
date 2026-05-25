@@ -46,6 +46,23 @@ describe('App smoke', () => {
     expect(num('Total')).toBeGreaterThan(num('Carry'));
   });
 
+  test('Dispersion panel renders with σ sliders and Run button', () => {
+    render(<App />);
+    expect(screen.getByText('Dispersion (Monte-Carlo)')).toBeInTheDocument();
+    expect(screen.getByText(/σ Ball speed/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Launch angle/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Spin axis/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Run dispersion/i })).toBeInTheDocument();
+  });
+
+  test('Dispersion panel switches σ field set when toggling to Club Delivery', () => {
+    render(<App />);
+    expect(screen.queryByText(/σ Face angle/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Club Delivery' }));
+    expect(screen.getByText(/σ Club speed/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Face angle/)).toBeInTheDocument();
+  });
+
   test('Save Shot adds a chip with label and total; Clear all empties history', () => {
     render(<App />);
     expect(screen.queryByText(/Saved shots/i)).toBeNull();

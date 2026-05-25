@@ -3,6 +3,7 @@ import { BallLaunchForm } from './panels/BallLaunchForm';
 import { ClubDeliveryForm } from './panels/ClubDeliveryForm';
 import { DerivedLaunchPanel } from './panels/DerivedLaunchPanel';
 import { EnvPanel } from './panels/EnvPanel';
+import { DispersionPanel } from './panels/DispersionPanel';
 import { ReadoutPanel } from './panels/ReadoutPanel';
 import { HistoryPanel } from './panels/HistoryPanel';
 import { SideProfilePlot } from './plots/SideProfilePlot';
@@ -30,6 +31,7 @@ export function App() {
           {mode === 'launch' ? <BallLaunchForm /> : <ClubDeliveryForm />}
           <DerivedLaunchPanel />
           <EnvPanel />
+          <DispersionPanel />
         </aside>
 
         <section className="app-content">
