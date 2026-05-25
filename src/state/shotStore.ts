@@ -57,6 +57,7 @@ const DEFAULT_ENV: EnvConditions = {
   altitudeM: 0,
   windSpeedMps: 0,
   windDirDeg: 0,
+  surface: 'fairway',
 };
 
 export const useShotStore = create<ShotStore>((set) => ({

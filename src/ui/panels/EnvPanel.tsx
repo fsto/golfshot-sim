@@ -1,5 +1,6 @@
 import { useShotStore } from '../../state/shotStore';
 import { NumericField } from '../controls/NumericField';
+import { SurfacePicker } from '../controls/SurfacePicker';
 import {
   tempDisplay, tempFromDisplay, tempUnit,
   pressureDisplay, pressureFromDisplay, pressureUnit,
@@ -81,6 +82,8 @@ export function EnvPanel() {
         unit="° (FROM; 0=head, 180=tail)"
         onChange={(v) => update({ windDirDeg: v })}
       />
+
+      <SurfacePicker />
     </section>
   );
 }

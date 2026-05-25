@@ -59,13 +59,25 @@ function spinVector(input: BallLaunchInput, velUnit: Vec3): Vec3 {
 }
 
 export function simulateFlight(input: BallLaunchInput, env: EnvConditions): Trajectory {
+  const vel = launchVelocity(input);
+  const spin = spinVector(input, normalize(vel));
+  const initial: KinState = { pos: { x: 0, y: 0, z: 0 }, vel, spin, t: 0 };
+  return simulateFlightFromState(initial, env);
+}
+
+/**
+ * Lower-level entry: integrate from an arbitrary ball state until ground contact (y ≤ 0).
+ * Used by simulateFlight for the primary launch, and by shot.ts for the post-bounce
+ * secondary arcs in the ground game.
+ *
+ * Ground-crossing rule: if the initial state is above ground, the integrator runs until
+ * y crosses zero from positive. If the initial state is on the ground (y ≈ 0) with vy > 0,
+ * we wait until y crosses zero again. With vy ≤ 0 we return immediately — there is no flight.
+ */
+export function simulateFlightFromState(initial: KinState, env: EnvConditions): Trajectory {
   const rho = airDensity(env);
   const wind = windVector(env);
   const ctx: AeroContext = { rho, wind };
-
-  const vel = launchVelocity(input);
-  const velUnit = normalize(vel);
-  const spin = spinVector(input, velUnit);
 
   const derivs: Derivs = (s) => ({
     dpos: s.vel,
@@ -74,17 +86,23 @@ export function simulateFlight(input: BallLaunchInput, env: EnvConditions): Traj
   });
 
   const samples: KinState[] = [];
-  let s: KinState = { pos: { x: 0, y: 0, z: 0 }, vel, spin, t: 0 };
+  let s: KinState = initial;
   samples.push(s);
-  let apexM = 0;
+  let apexM = s.pos.y;
+
+  // If the ball isn't going up, there's no flight phase.
+  if (s.vel.y <= 0 && s.pos.y <= 0) {
+    return { samples, apexM, hangTimeS: 0, landingState: s };
+  }
 
   let stepIdx = 0;
-  while (s.t < T_MAX) {
+  const startT = s.t;
+  while (s.t - startT < T_MAX) {
     const next = rk4Step(s, DT, derivs);
     stepIdx++;
 
-    // Ground crossing: y went from ≥0 to <0 (after at least one step)
-    if (next.pos.y < 0 && s.t > 0) {
+    // Ground crossing: y went from ≥0 to <0, with at least one step from the start
+    if (next.pos.y < 0 && s.pos.y >= 0 && stepIdx > 1) {
       const denom = s.pos.y - next.pos.y;
       const alpha = denom === 0 ? 0 : s.pos.y / denom; // ∈ [0,1)
       const landing: KinState = {
@@ -95,12 +113,12 @@ export function simulateFlight(input: BallLaunchInput, env: EnvConditions): Traj
       };
       samples.push(landing);
       apexM = Math.max(apexM, landing.pos.y);
-      return { samples, apexM, hangTimeS: landing.t, landingState: landing };
+      return { samples, apexM, hangTimeS: landing.t - startT, landingState: landing };
     }
 
     s = next;
     if (stepIdx % STORE_EVERY === 0) samples.push(s);
     if (s.pos.y > apexM) apexM = s.pos.y;
   }
-  return { samples, apexM, hangTimeS: s.t, landingState: s };
+  return { samples, apexM, hangTimeS: s.t - startT, landingState: s };
 }

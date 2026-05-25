@@ -34,6 +34,29 @@ describe('App smoke', () => {
     expect(n).toBeLessThan(290);
   });
 
+  test('Total readout shows farther than Carry (bounce + roll add distance)', () => {
+    render(<App />);
+    const num = (label: string) =>
+      parseFloat(
+        within(screen.getByText(label).closest('.stat') as HTMLElement)
+          .getByText(/\d+\.\d+/).textContent ?? '',
+      );
+    expect(num('Total')).toBeGreaterThan(num('Carry'));
+  });
+
+  test('switching surface to Rough cuts total distance vs Fairway', () => {
+    render(<App />);
+    const totalNum = () =>
+      parseFloat(
+        within(screen.getByText('Total').closest('.stat') as HTMLElement)
+          .getByText(/\d+\.\d+/).textContent ?? '',
+      );
+    const fairwayTotal = totalNum();
+    fireEvent.click(screen.getByRole('button', { name: 'Rough' }));
+    const roughTotal = totalNum();
+    expect(roughTotal).toBeLessThan(fairwayTotal);
+  });
+
   test('switching to metric flips the carry to meters', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Metric' }));

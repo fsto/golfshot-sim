@@ -31,6 +31,7 @@ export function ReadoutPanel() {
   return (
     <section className="readout">
       <Stat label="Carry"        value={distanceDisplay(r.carryM, units).toFixed(1)}      unit={dUnit} />
+      <Stat label="Total"        value={distanceDisplay(r.totalM, units).toFixed(1)}      unit={dUnit} />
       <Stat label="Apex"         value={shortDistanceDisplay(r.apexM, units).toFixed(1)}  unit={sUnit} />
       <Stat label="Descent"      value={r.descentAngleDeg.toFixed(1)}                     unit="°" />
       <Stat label="Hang time"    value={r.hangTimeS.toFixed(2)}                           unit="s" />

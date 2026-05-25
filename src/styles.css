@@ -107,6 +107,9 @@ body {
 }
 .derived-unit { color: var(--fg-muted); font-size: 11px; }
 
+.surface-picker { display: flex; width: 100%; }
+.surface-picker button { flex: 1; }
+
 .preset-picker { margin-bottom: 12px; }
 .preset-select {
   width: 100%;

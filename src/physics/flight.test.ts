@@ -10,6 +10,7 @@ const SEA_LEVEL_ISA_DRY: EnvConditions = {
   altitudeM: 0,
   windSpeedMps: 0,
   windDirDeg: 0,
+  surface: 'fairway',
 };
 
 const TOUR_DRIVER: BallLaunchInput = {

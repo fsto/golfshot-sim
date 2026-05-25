@@ -6,7 +6,7 @@ import type { EnvConditions } from '../physics/types';
 
 const ISA: EnvConditions = {
   tempK: cToK(15), pressurePa: 101325, humidityPct: 0,
-  altitudeM: 0, windSpeedMps: 0, windDirDeg: 0,
+  altitudeM: 0, windSpeedMps: 0, windDirDeg: 0, surface: 'fairway',
 };
 
 /**

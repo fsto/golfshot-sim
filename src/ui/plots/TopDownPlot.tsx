@@ -12,29 +12,44 @@ export function TopDownPlot() {
   const traj = useTrajectory();
 
   const data = useMemo(() => {
-    const samples = traj.flight.samples;
-    const stride = Math.max(1, Math.floor(samples.length / 120));
-    const out: Array<{ x: number; z: number }> = [];
-    for (let i = 0; i < samples.length; i += stride) {
-      const s = samples[i]!;
+    const flight = traj.flight.samples;
+    const fStride = Math.max(1, Math.floor(flight.length / 120));
+    const out: Array<{ x: number; carry: number | null; ground: number | null }> = [];
+    for (let i = 0; i < flight.length; i += fStride) {
+      const s = flight[i]!;
       out.push({
         x: distanceDisplay(s.pos.x, units),
-        z: distanceDisplay(s.pos.z, units),
+        carry: distanceDisplay(s.pos.z, units),
+        ground: null,
       });
     }
-    const last = samples[samples.length - 1];
+    const last = flight[flight.length - 1];
     if (last) {
       out.push({
         x: distanceDisplay(last.pos.x, units),
-        z: distanceDisplay(last.pos.z, units),
+        carry: distanceDisplay(last.pos.z, units),
+        ground: distanceDisplay(last.pos.z, units),
+      });
+    }
+    const ground = traj.rollPath;
+    const gStride = Math.max(1, Math.floor(ground.length / 80));
+    for (let i = 0; i < ground.length; i += gStride) {
+      const p = ground[i]!;
+      out.push({
+        x: distanceDisplay(p.x, units),
+        carry: null,
+        ground: distanceDisplay(p.z, units),
       });
     }
     return out;
   }, [traj, units]);
 
-  const carryDisplay = distanceDisplay(traj.carryM, units);
+  const totalDisplay = distanceDisplay(traj.totalM, units);
   const yDomain: [number, number] = (() => {
-    const maxAbs = data.reduce((m, p) => Math.max(m, Math.abs(p.z)), 1);
+    const maxAbs = data.reduce(
+      (m, p) => Math.max(m, Math.abs(p.carry ?? 0), Math.abs(p.ground ?? 0)),
+      1,
+    );
     const padded = Math.max(maxAbs * 1.3, 8);
     return [-padded, padded];
   })();
@@ -48,7 +63,7 @@ export function TopDownPlot() {
           <XAxis
             dataKey="x"
             type="number"
-            domain={[0, Math.max(carryDisplay * 1.05, 50)]}
+            domain={[0, Math.max(totalDisplay * 1.05, 50)]}
             label={{ value: `Distance (${distanceUnit(units)})`, position: 'insideBottom', offset: -10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
@@ -74,11 +89,21 @@ export function TopDownPlot() {
           />
           <Line
             type="monotone"
-            dataKey="z"
+            dataKey="carry"
             stroke="#c4b5fd"
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
+            connectNulls={false}
+          />
+          <Line
+            type="monotone"
+            dataKey="ground"
+            stroke="#86efac"
+            strokeWidth={1.5}
+            dot={false}
+            isAnimationActive={false}
+            connectNulls={false}
           />
         </LineChart>
       </ResponsiveContainer>

@@ -5,7 +5,7 @@ import type { BallLaunchInput, EnvConditions } from './types';
 
 const ISA: EnvConditions = {
   tempK: cToK(15), pressurePa: 101325, humidityPct: 0,
-  altitudeM: 0, windSpeedMps: 0, windDirDeg: 0,
+  altitudeM: 0, windSpeedMps: 0, windDirDeg: 0, surface: 'fairway',
 };
 
 const DRIVER: BallLaunchInput = {
@@ -22,11 +22,19 @@ describe('simulateShot', () => {
     const r = simulateShot(DRIVER, ISA);
     expect(r.flight.samples.length).toBeGreaterThan(100);
     expect(r.carryM).toBeGreaterThan(200);
-    expect(r.totalM).toBe(r.carryM); // M1: no bounce/roll yet
+    expect(r.totalM).toBeGreaterThan(r.carryM); // bounce + roll add distance
     expect(r.apexM).toBeGreaterThan(20);
     expect(r.hangTimeS).toBeGreaterThan(5);
-    expect(r.firstBounce).toBeNull();
-    expect(r.rollPath).toEqual([]);
+    expect(r.firstBounce).not.toBeNull();
+    expect(r.rollPath.length).toBeGreaterThan(0);
+  });
+
+  test('total distance respects surface (rough rolls much less than fairway than green)', () => {
+    const greenTotal = simulateShot(DRIVER, { ...ISA, surface: 'green' }).totalM;
+    const fairwayTotal = simulateShot(DRIVER, { ...ISA, surface: 'fairway' }).totalM;
+    const roughTotal = simulateShot(DRIVER, { ...ISA, surface: 'rough' }).totalM;
+    expect(greenTotal).toBeGreaterThan(fairwayTotal);
+    expect(fairwayTotal).toBeGreaterThan(roughTotal);
   });
 
   test('descent angle is in expected range for a driver (~38..50°)', () => {

@@ -14,6 +14,7 @@ describe('atmosphere', () => {
       altitudeM: 0,
       windSpeedMps: 0,
       windDirDeg: 0,
+      surface: 'fairway',
     });
     close(rho, 1.225, 0.002);
   });
@@ -21,11 +22,11 @@ describe('atmosphere', () => {
   test('humidity reduces air density (water vapor is lighter)', () => {
     const dry = airDensity({
       tempK: cToK(15), pressurePa: 101325, humidityPct: 0,
-      altitudeM: 0, windSpeedMps: 0, windDirDeg: 0,
+      altitudeM: 0, windSpeedMps: 0, windDirDeg: 0, surface: 'fairway',
     });
     const humid = airDensity({
       tempK: cToK(15), pressurePa: 101325, humidityPct: 100,
-      altitudeM: 0, windSpeedMps: 0, windDirDeg: 0,
+      altitudeM: 0, windSpeedMps: 0, windDirDeg: 0, surface: 'fairway',
     });
     expect(humid).toBeLessThan(dry);
     // At 15°C 100% RH, density drops ~0.5%; Brüning/Picard typical reference ~1.220 kg/m³
@@ -41,6 +42,7 @@ describe('atmosphere', () => {
       altitudeM: 1600,
       windSpeedMps: 0,
       windDirDeg: 0,
+      surface: 'fairway',
     });
     close(rho, 1.008, 0.01);
   });
@@ -48,7 +50,7 @@ describe('atmosphere', () => {
   test('hot day reduces density', () => {
     const rho = airDensity({
       tempK: cToK(35), pressurePa: 101325, humidityPct: 0,
-      altitudeM: 0, windSpeedMps: 0, windDirDeg: 0,
+      altitudeM: 0, windSpeedMps: 0, windDirDeg: 0, surface: 'fairway',
     });
     close(rho, 1.146, 0.005);
   });

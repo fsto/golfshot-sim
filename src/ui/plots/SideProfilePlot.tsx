@@ -15,22 +15,35 @@ export function SideProfilePlot() {
   const traj = useTrajectory();
 
   const data = useMemo(() => {
-    // Downsample to ~120 points for chart performance / readability.
-    const samples = traj.flight.samples;
-    const stride = Math.max(1, Math.floor(samples.length / 120));
-    const out: Array<{ x: number; y: number }> = [];
-    for (let i = 0; i < samples.length; i += stride) {
-      const s = samples[i]!;
+    // Carry phase: downsampled to ~120 points
+    const flight = traj.flight.samples;
+    const stride = Math.max(1, Math.floor(flight.length / 120));
+    const out: Array<{ x: number; carry: number | null; ground: number | null }> = [];
+    for (let i = 0; i < flight.length; i += stride) {
+      const s = flight[i]!;
       out.push({
         x: distanceDisplay(s.pos.x, units),
-        y: shortDistanceDisplay(s.pos.y, units),
+        carry: shortDistanceDisplay(s.pos.y, units),
+        ground: null,
       });
     }
-    const last = samples[samples.length - 1];
+    const last = flight[flight.length - 1];
     if (last) {
       out.push({
         x: distanceDisplay(last.pos.x, units),
-        y: shortDistanceDisplay(last.pos.y, units),
+        carry: shortDistanceDisplay(last.pos.y, units),
+        ground: shortDistanceDisplay(last.pos.y, units),
+      });
+    }
+    // Ground phase (bounces + roll), downsampled
+    const ground = traj.rollPath;
+    const gStride = Math.max(1, Math.floor(ground.length / 80));
+    for (let i = 0; i < ground.length; i += gStride) {
+      const p = ground[i]!;
+      out.push({
+        x: distanceDisplay(p.x, units),
+        carry: null,
+        ground: shortDistanceDisplay(p.y, units),
       });
     }
     return out;
@@ -70,11 +83,21 @@ export function SideProfilePlot() {
           />
           <Line
             type="monotone"
-            dataKey="y"
+            dataKey="carry"
             stroke="#7dd3fc"
             strokeWidth={2}
             dot={false}
             isAnimationActive={false}
+            connectNulls={false}
+          />
+          <Line
+            type="monotone"
+            dataKey="ground"
+            stroke="#86efac"
+            strokeWidth={1.5}
+            dot={false}
+            isAnimationActive={false}
+            connectNulls={false}
           />
         </LineChart>
       </ResponsiveContainer>
