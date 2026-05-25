@@ -4,11 +4,13 @@ import { ClubDeliveryForm } from './panels/ClubDeliveryForm';
 import { DerivedLaunchPanel } from './panels/DerivedLaunchPanel';
 import { EnvPanel } from './panels/EnvPanel';
 import { ReadoutPanel } from './panels/ReadoutPanel';
+import { HistoryPanel } from './panels/HistoryPanel';
 import { SideProfilePlot } from './plots/SideProfilePlot';
 import { TopDownPlot } from './plots/TopDownPlot';
 import { Scene } from './scene/Scene';
 import { UnitsToggle } from './controls/UnitsToggle';
 import { ModeToggle } from './controls/ModeToggle';
+import { SaveShotButton } from './controls/SaveShotButton';
 
 export function App() {
   const mode = useShotStore((s) => s.mode);
@@ -19,6 +21,7 @@ export function App() {
         <div className="app-header-controls">
           <ModeToggle />
           <UnitsToggle />
+          <SaveShotButton />
         </div>
       </header>
 
@@ -31,6 +34,7 @@ export function App() {
 
         <section className="app-content">
           <ReadoutPanel />
+          <HistoryPanel />
           <Scene />
           <div className="plot-row">
             <SideProfilePlot />

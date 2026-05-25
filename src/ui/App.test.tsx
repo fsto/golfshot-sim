@@ -1,6 +1,7 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { useShotStore } from '../state/shotStore';
+import { useHistoryStore } from '../state/historyStore';
 
 // Three.js / r3f need WebGL; stub the scene out for jsdom tests.
 vi.mock('./scene/Scene', () => ({
@@ -11,6 +12,7 @@ const { App } = await import('./App');
 
 beforeEach(() => {
   useShotStore.getState().reset();
+  useHistoryStore.getState().clear();
 });
 
 describe('App smoke', () => {
@@ -42,6 +44,23 @@ describe('App smoke', () => {
           .getByText(/\d+\.\d+/).textContent ?? '',
       );
     expect(num('Total')).toBeGreaterThan(num('Carry'));
+  });
+
+  test('Save Shot adds a chip with label and total; Clear all empties history', () => {
+    render(<App />);
+    expect(screen.queryByText(/Saved shots/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Save Shot/i }));
+    expect(screen.getByText(/Saved shots \(1\)/i)).toBeInTheDocument();
+    // Default mode is launch → label starts with "Launch"
+    expect(screen.getByText(/Launch #1/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Save Shot/i }));
+    expect(screen.getByText(/Saved shots \(2\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Launch #2/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Clear all/i }));
+    expect(screen.queryByText(/Saved shots/i)).toBeNull();
   });
 
   test('switching surface to Rough cuts total distance vs Fairway', () => {

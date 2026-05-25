@@ -2,14 +2,36 @@ import { useMemo } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { useShotStore } from '../../state/shotStore';
+import { useShotStore, type Units } from '../../state/shotStore';
+import { useHistoryStore } from '../../state/historyStore';
 import { useTrajectory } from '../../hooks/useTrajectory';
+import type { ShotResult } from '../../physics/types';
 import { distanceDisplay, distanceUnit } from '../../lib/format';
+
+function sampleTopDown(result: ShotResult, units: Units): Array<{ x: number; z: number }> {
+  const flight = result.flight.samples;
+  const stride = Math.max(1, Math.floor(flight.length / 80));
+  const out: Array<{ x: number; z: number }> = [];
+  for (let i = 0; i < flight.length; i += stride) {
+    const s = flight[i]!;
+    out.push({ x: distanceDisplay(s.pos.x, units), z: distanceDisplay(s.pos.z, units) });
+  }
+  const last = flight[flight.length - 1];
+  if (last) out.push({ x: distanceDisplay(last.pos.x, units), z: distanceDisplay(last.pos.z, units) });
+  const ground = result.rollPath;
+  const gStride = Math.max(1, Math.floor(ground.length / 60));
+  for (let i = 0; i < ground.length; i += gStride) {
+    const p = ground[i]!;
+    out.push({ x: distanceDisplay(p.x, units), z: distanceDisplay(p.z, units) });
+  }
+  return out;
+}
 
 /** Top-down: lateral (z) vs distance (x). Reveals draw/fade curvature. */
 export function TopDownPlot() {
   const units = useShotStore((s) => s.units);
   const traj = useTrajectory();
+  const ghosts = useHistoryStore((s) => s.shots);
 
   const data = useMemo(() => {
     const flight = traj.flight.samples;
@@ -87,6 +109,19 @@ export function TopDownPlot() {
               return Number.isFinite(n) ? `${n.toFixed(0)} ${distanceUnit(units)}` : String(label);
             }}
           />
+          {ghosts.map((g) => (
+            <Line
+              key={g.id}
+              data={sampleTopDown(g.result, units)}
+              type="monotone"
+              dataKey="z"
+              stroke={g.color}
+              strokeWidth={1.2}
+              strokeOpacity={0.5}
+              dot={false}
+              isAnimationActive={false}
+            />
+          ))}
           <Line
             type="monotone"
             dataKey="carry"

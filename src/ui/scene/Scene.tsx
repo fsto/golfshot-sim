@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sky } from '@react-three/drei';
 import { DrivingRange } from './DrivingRange';
 import { BallTrace } from './BallTrace';
+import { GhostTrace } from './GhostTrace';
 
 export function Scene() {
   return (
@@ -36,6 +37,7 @@ export function Scene() {
         />
 
         <DrivingRange />
+        <GhostTrace />
         <BallTrace />
 
         <OrbitControls

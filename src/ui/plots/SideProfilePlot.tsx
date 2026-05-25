@@ -2,17 +2,39 @@ import { useMemo } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { useShotStore } from '../../state/shotStore';
+import { useShotStore, type Units } from '../../state/shotStore';
+import { useHistoryStore } from '../../state/historyStore';
 import { useTrajectory } from '../../hooks/useTrajectory';
+import type { ShotResult } from '../../physics/types';
 import {
   distanceDisplay, distanceUnit,
   shortDistanceDisplay, shortDistanceUnit,
 } from '../../lib/format';
 
+function sampleProfile(result: ShotResult, units: Units): Array<{ x: number; y: number }> {
+  const flight = result.flight.samples;
+  const stride = Math.max(1, Math.floor(flight.length / 80));
+  const out: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < flight.length; i += stride) {
+    const s = flight[i]!;
+    out.push({ x: distanceDisplay(s.pos.x, units), y: shortDistanceDisplay(s.pos.y, units) });
+  }
+  const last = flight[flight.length - 1];
+  if (last) out.push({ x: distanceDisplay(last.pos.x, units), y: shortDistanceDisplay(last.pos.y, units) });
+  const ground = result.rollPath;
+  const gStride = Math.max(1, Math.floor(ground.length / 60));
+  for (let i = 0; i < ground.length; i += gStride) {
+    const p = ground[i]!;
+    out.push({ x: distanceDisplay(p.x, units), y: shortDistanceDisplay(p.y, units) });
+  }
+  return out;
+}
+
 /** Height-vs-distance side profile (the "shape" of the shot). */
 export function SideProfilePlot() {
   const units = useShotStore((s) => s.units);
   const traj = useTrajectory();
+  const ghosts = useHistoryStore((s) => s.shots);
 
   const data = useMemo(() => {
     // Carry phase: downsampled to ~120 points
@@ -81,6 +103,19 @@ export function SideProfilePlot() {
               return Number.isFinite(n) ? `${n.toFixed(0)} ${distanceUnit(units)}` : String(label);
             }}
           />
+          {ghosts.map((g) => (
+            <Line
+              key={g.id}
+              data={sampleProfile(g.result, units)}
+              type="monotone"
+              dataKey="y"
+              stroke={g.color}
+              strokeWidth={1.2}
+              strokeOpacity={0.5}
+              dot={false}
+              isAnimationActive={false}
+            />
+          ))}
           <Line
             type="monotone"
             dataKey="carry"
