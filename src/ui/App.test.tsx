@@ -1,7 +1,13 @@
-import { describe, expect, test, beforeEach } from 'vitest';
+import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { App } from './App';
 import { useShotStore } from '../state/shotStore';
+
+// Three.js / r3f need WebGL; stub the scene out for jsdom tests.
+vi.mock('./scene/Scene', () => ({
+  Scene: () => <div data-testid="scene-stub" />,
+}));
+
+const { App } = await import('./App');
 
 beforeEach(() => {
   useShotStore.getState().reset();

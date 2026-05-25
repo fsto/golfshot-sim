@@ -161,6 +161,21 @@ body {
 }
 .stat-unit { color: var(--fg-muted); font-size: 12px; }
 
+.scene {
+  background: linear-gradient(to bottom, #1a2a3a 0%, #0f1218 100%);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  height: 420px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.plot-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .plot {
   background: var(--bg-elev-2);
   border: 1px solid var(--border);
@@ -180,4 +195,6 @@ body {
   .app-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .app-side { border-right: none; border-bottom: 1px solid var(--border); }
   .readout { grid-template-columns: repeat(3, 1fr); }
+  .plot-row { grid-template-columns: 1fr; }
+  .scene { height: 320px; }
 }
