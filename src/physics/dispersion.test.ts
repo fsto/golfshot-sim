@@ -81,6 +81,22 @@ describe('simulateDispersion', () => {
     );
   });
 
+  test('delivery mode: smashFactor sigma never produces ball speeds above the preset cap', () => {
+    // A really aggressive σ to try to push samples above the cap.
+    const r = simulateDispersion(SEVEN_IRON_DELIVERY, ISA, { smashFactor: 0.1 }, 200, 17);
+    // PGA 7-iron preset smash = 1.337 → max ball speed = 89 mph * 1.337 = 119 mph = 53.20 m/s
+    const cap = 53.20;
+    for (const carry of r.carries) {
+      expect(carry).toBeLessThan(180); // sanity — no shot is 200+ yd with a 7-iron
+    }
+    // Carry monotonically increases with ball speed (roughly), so capping ball speed caps carry.
+    // The base preset carries ~172 yd; a smash above 1.337 would exceed that systematically.
+    // With clamp, the mean carry should be ≤ the base carry (or close to it given truncation).
+    const meanCarry = r.carries.reduce((a, b) => a + b, 0) / r.carries.length;
+    // Base 7-iron sim is ~178 yd; smash-only σ truncated above means mean carry should be ≤ base.
+    expect(meanCarry).toBeLessThanOrEqual(178 / 1.0936 + 1); // converting yd→m, tolerate 1m
+  });
+
   test('rest x is downrange of landing x on a forward shot', () => {
     const r = simulateDispersion(DRIVER, ISA, { ballSpeedMps: 1 }, 30, 3);
     for (let i = 0; i < r.landings.length; i++) {

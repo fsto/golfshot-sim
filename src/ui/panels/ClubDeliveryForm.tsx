@@ -1,6 +1,7 @@
 import { useShotStore } from '../../state/shotStore';
 import { NumericField } from '../controls/NumericField';
 import { PresetPicker } from './PresetPicker';
+import { CLUB_PRESETS } from '../../presets/pgaPresets';
 import {
   speedDisplay, speedFromDisplay, speedUnit,
 } from '../../lib/format';
@@ -9,6 +10,8 @@ export function ClubDeliveryForm() {
   const delivery = useShotStore((s) => s.delivery);
   const units = useShotStore((s) => s.units);
   const update = useShotStore((s) => s.updateDelivery);
+  const presetSmash = CLUB_PRESETS[delivery.clubId].smashFactor;
+  const currentSmash = delivery.smashFactor ?? presetSmash;
 
   return (
     <section className="panel">
@@ -25,6 +28,17 @@ export function ClubDeliveryForm() {
         decimals={1}
         unit={speedUnit(units)}
         onChange={(v) => update({ clubSpeedMps: speedFromDisplay(v, units) })}
+      />
+
+      <NumericField
+        label="Smash factor"
+        value={currentSmash}
+        min={Math.max(0.7, presetSmash - 0.3)}
+        max={presetSmash}
+        step={0.005}
+        decimals={3}
+        unit={`(max ${presetSmash.toFixed(2)})`}
+        onChange={(v) => update({ smashFactor: v })}
       />
 
       <NumericField

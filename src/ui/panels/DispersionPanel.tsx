@@ -33,6 +33,7 @@ export function DispersionPanel() {
             attackAngleDeg: cfg.attackAngleDeg,
             clubPathDeg: cfg.clubPathDeg,
             faceAngleDeg: cfg.faceAngleDeg,
+            smashFactor: cfg.smashFactor,
           };
     run(sigmas, cfg.n, cfg.seed);
   };
@@ -135,6 +136,16 @@ export function DispersionPanel() {
             decimals={1}
             unit="°"
             onChange={(v) => update({ faceAngleDeg: v })}
+          />
+          <NumericField
+            label="σ Smash factor"
+            value={cfg.smashFactor}
+            min={0}
+            max={0.10}
+            step={0.005}
+            decimals={3}
+            unit="(capped at preset)"
+            onChange={(v) => update({ smashFactor: v })}
           />
         </>
       )}

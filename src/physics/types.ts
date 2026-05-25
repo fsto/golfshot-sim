@@ -52,6 +52,12 @@ export interface ClubDeliveryInput {
   clubPathDeg: number;     // +right, -left
   faceAngleDeg: number;    // absolute (vs target), +right open
   dynamicLoftDeg: number;
+  /**
+   * Effective smash factor for this strike. If omitted, the preset's tour-average smash
+   * factor is used. Should never exceed the preset's value — that's the physical "perfect"
+   * ceiling enforced at the store boundary and during dispersion.
+   */
+  smashFactor?: number;
   strikeOffsetMm?: Vec3;   // future: gear effect; null/zero for centered strike
 }
 

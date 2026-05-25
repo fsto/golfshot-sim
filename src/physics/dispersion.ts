@@ -1,6 +1,7 @@
 import { simulateShot } from './shot';
 import type { ShotInput, EnvConditions } from './types';
 import { makeRng, gaussian } from '../lib/math/rng';
+import { CLUB_PRESETS } from '../presets/pgaPresets';
 
 /**
  * Standard-deviation perturbations applied to launch- or delivery-mode inputs.
@@ -20,6 +21,7 @@ export interface DispersionSigmas {
   clubPathDeg?: number;
   faceAngleDeg?: number;
   dynamicLoftDeg?: number;
+  smashFactor?: number;
 }
 
 export interface DispersionResult {
@@ -44,6 +46,11 @@ function perturb(input: ShotInput, sigmas: DispersionSigmas, rng: () => number):
       spinAxisDeg: input.spinAxisDeg + g(rng, sigmas.spinAxisDeg),
     };
   }
+  const cap = CLUB_PRESETS[input.clubId].smashFactor;
+  const baseSmash = input.smashFactor ?? cap;
+  // Perturb but NEVER exceed the preset's "perfect" smash — a real strike can only be
+  // less efficient than the ideal centered hit.
+  const smash = Math.min(cap, Math.max(0, baseSmash + g(rng, sigmas.smashFactor)));
   return {
     ...input,
     clubSpeedMps: Math.max(0, input.clubSpeedMps + g(rng, sigmas.clubSpeedMps)),
@@ -51,6 +58,7 @@ function perturb(input: ShotInput, sigmas: DispersionSigmas, rng: () => number):
     clubPathDeg: input.clubPathDeg + g(rng, sigmas.clubPathDeg),
     faceAngleDeg: input.faceAngleDeg + g(rng, sigmas.faceAngleDeg),
     dynamicLoftDeg: input.dynamicLoftDeg + g(rng, sigmas.dynamicLoftDeg),
+    smashFactor: smash,
   };
 }
 

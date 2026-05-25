@@ -27,8 +27,9 @@ export function clubToBall(d: ClubDeliveryInput, preset: ClubPreset): BallLaunch
   const neutral = preset.neutralDelivery;
   const avg = preset.tourAvg;
 
-  // 1. Ball speed from smash factor
-  const ballSpeedMps = d.clubSpeedMps * preset.smashFactor;
+  // 1. Ball speed from smash factor (overridable per strike, capped at preset's "perfect")
+  const smash = Math.min(d.smashFactor ?? preset.smashFactor, preset.smashFactor);
+  const ballSpeedMps = d.clubSpeedMps * smash;
 
   // 2. Start direction (azimuth) — face-dominated
   const azimuthDeg = 0.85 * d.faceAngleDeg + 0.15 * d.clubPathDeg;

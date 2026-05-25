@@ -106,7 +106,8 @@ export function TopDownPlot() {
           <YAxis
             type="number"
             domain={yDomain}
-            label={{ value: `Lateral (${distanceUnit(units)})`, angle: -90, position: 'insideLeft', offset: 10, fill: '#9aa3b2' }}
+            reversed
+            label={{ value: `Lateral (${distanceUnit(units)}) — left ↑ / right ↓`, angle: -90, position: 'insideLeft', offset: 10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
             tickFormatter={(v: number) => Math.round(v).toString()}

@@ -24,6 +24,7 @@ export interface DispersionConfig {
   attackAngleDeg: number;
   clubPathDeg: number;
   faceAngleDeg: number;
+  smashFactor: number;
   // Common
   n: number;
   seed: number;
@@ -39,6 +40,7 @@ const DEFAULT_DISPERSION: DispersionConfig = {
   attackAngleDeg: 0.5,
   clubPathDeg: 1.0,
   faceAngleDeg: 1.0,
+  smashFactor: 0.02,
   n: 100,
   seed: 1,
 };
@@ -70,7 +72,8 @@ const DEFAULT_LAUNCH: BallLaunchInput = {
 };
 
 function deliveryFromPreset(id: ClubId): ClubDeliveryInput {
-  const n = CLUB_PRESETS[id].neutralDelivery;
+  const preset = CLUB_PRESETS[id];
+  const n = preset.neutralDelivery;
   return {
     mode: 'delivery',
     clubId: id,
@@ -79,6 +82,7 @@ function deliveryFromPreset(id: ClubId): ClubDeliveryInput {
     clubPathDeg: n.clubPathDeg,
     faceAngleDeg: n.faceAngleDeg,
     dynamicLoftDeg: n.dynamicLoftDeg,
+    smashFactor: preset.smashFactor,
   };
 }
 
@@ -106,7 +110,16 @@ export const useShotStore = create<ShotStore>((set) => ({
   updateLaunch: (patch) =>
     set((s) => ({ launch: { ...s.launch, ...patch, mode: 'launch' } })),
   updateDelivery: (patch) =>
-    set((s) => ({ delivery: { ...s.delivery, ...patch, mode: 'delivery' } })),
+    set((s) => {
+      const next: ClubDeliveryInput = { ...s.delivery, ...patch, mode: 'delivery' };
+      // Smash factor is capped at the preset's "perfect" value — a real-world strike can
+      // only ever be less efficient than the optimal centered hit.
+      const cap = CLUB_PRESETS[next.clubId].smashFactor;
+      if (next.smashFactor !== undefined) {
+        next.smashFactor = Math.min(next.smashFactor, cap);
+      }
+      return { delivery: next };
+    }),
   setClub: (id) => set({ delivery: deliveryFromPreset(id) }),
   updateEnv: (patch) =>
     set((s) => {
