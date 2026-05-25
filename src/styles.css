@@ -341,17 +341,41 @@ body {
   margin-bottom: 8px;
 }
 
+/**
+ * Mobile layout (≤900 px): abandon the desktop "fixed viewport, internal scrollers"
+ * model. The page scrolls naturally end-to-end. Visualizations come FIRST (visible on
+ * landing) and the input panels stack below — touch users get to see the shot before
+ * any sliders.
+ */
 @media (max-width: 900px) {
-  .app-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .app-side {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    max-height: none;
+  html, body, #root { height: auto; min-height: 100%; }
+  .app { display: block; height: auto; min-height: 100vh; }
+  .app-main {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    overflow: visible;
   }
+  /* Visualizations first, inputs second */
+  .app-content {
+    order: 1;
+    overflow: visible;
+    padding: 12px 16px;
+  }
+  .app-side {
+    order: 2;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    max-height: none;
+    overflow: visible;
+    padding: 12px 16px;
+  }
+
   .readout { grid-template-columns: repeat(3, 1fr); }
   .plot-row { grid-template-columns: 1fr; }
-  .scene { height: 320px; }
-  .app-content { padding: 12px 16px; }
+  /* Generous viewport-relative heights so the scene + plots actually dominate the screen */
+  .scene { height: min(60vh, 480px); margin-bottom: 14px; }
+  .plot { padding: 12px 14px; }
 }
 
 @media (max-width: 560px) {
@@ -363,9 +387,14 @@ body {
     padding: 8px 12px;        /* taller for finger taps */
     font-size: 12px;
   }
-  .readout { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 12px; }
-  .stat-value { font-size: 18px; }
-  .scene { height: 240px; }
+  .readout {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .stat-value { font-size: 16px; }
+  .stat-label { font-size: 9px; }
+  .scene { height: min(55vh, 380px); }
   .field-controls { grid-template-columns: 1fr 60px; }
   .field-range { min-height: 28px; }   /* easier slider grab on touch */
   .dispersion-summary { grid-template-columns: repeat(3, 1fr); gap: 4px; }
