@@ -97,7 +97,15 @@ export const useShotStore = create<ShotStore>((set) => ({
   updateDelivery: (patch) =>
     set((s) => ({ delivery: { ...s.delivery, ...patch, mode: 'delivery' } })),
   setClub: (id) => set({ delivery: deliveryFromPreset(id) }),
-  updateEnv: (patch) => set((s) => ({ env: { ...s.env, ...patch } })),
+  updateEnv: (patch) =>
+    set((s) => {
+      const next = { ...s.env, ...patch };
+      // Allow explicit undefined to remove the optional Coriolis latitude
+      if ('coriolisLatDeg' in patch && patch.coriolisLatDeg === undefined) {
+        delete next.coriolisLatDeg;
+      }
+      return { env: next };
+    }),
   updateDispersion: (patch) =>
     set((s) => ({ dispersion: { ...s.dispersion, ...patch } })),
   reset: () =>

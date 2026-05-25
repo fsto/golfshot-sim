@@ -84,6 +84,44 @@ export function EnvPanel() {
       />
 
       <SurfacePicker />
+
+      <CoriolisRow />
     </section>
+  );
+}
+
+function CoriolisRow() {
+  const lat = useShotStore((s) => s.env.coriolisLatDeg);
+  const update = useShotStore((s) => s.updateEnv);
+  const enabled = lat !== undefined;
+  return (
+    <div className="field">
+      <label className="field-label">
+        <span>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) =>
+              update({ coriolisLatDeg: e.target.checked ? 40 : undefined })
+            }
+            style={{ marginRight: 6 }}
+          />
+          Coriolis (Earth rotation)
+        </span>
+        <span className="field-unit">~0.1 m effect</span>
+      </label>
+      {enabled && (
+        <NumericField
+          label="Latitude"
+          value={lat}
+          min={-90}
+          max={90}
+          step={0.5}
+          decimals={1}
+          unit="°  (+N / −S)"
+          onChange={(v) => update({ coriolisLatDeg: v })}
+        />
+      )}
+    </div>
   );
 }

@@ -2,11 +2,14 @@ import type { Vec3 } from './types';
 import { add, cross, norm, scale, sub, ZERO } from '../lib/math/vec3';
 import { BALL_AREA_M2, BALL_MASS_KG, G } from './constants';
 import { cd, cl, spinRatio } from './aero';
+import { coriolisAccel } from './coriolis';
 import type { KinState } from './integrator';
 
 export interface AeroContext {
-  rho: number;   // kg/m³, precomputed for the shot
-  wind: Vec3;    // m/s, wind velocity vector in world frame (the velocity of the air)
+  rho: number;        // kg/m³, precomputed for the shot
+  wind: Vec3;         // m/s, wind velocity vector in world frame (the velocity of the air)
+  /** Optional latitude (degrees) — if set, Coriolis is added to bodyAccel. */
+  coriolisLatDeg?: number;
 }
 
 /** Constant gravitational acceleration in world frame. */
@@ -47,7 +50,11 @@ export function aeroAccel(s: KinState, ctx: AeroContext): Vec3 {
   return add(aDrag, aLift);
 }
 
-/** Total acceleration on the ball: aero + gravity. */
+/** Total acceleration on the ball: aero + gravity + (optional) Coriolis. */
 export function bodyAccel(s: KinState, ctx: AeroContext): Vec3 {
-  return add(aeroAccel(s, ctx), gravityAccel());
+  const a = add(aeroAccel(s, ctx), gravityAccel());
+  if (ctx.coriolisLatDeg !== undefined) {
+    return add(a, coriolisAccel(s.vel, ctx.coriolisLatDeg));
+  }
+  return a;
 }

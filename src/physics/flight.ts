@@ -77,7 +77,10 @@ export function simulateFlight(input: BallLaunchInput, env: EnvConditions): Traj
 export function simulateFlightFromState(initial: KinState, env: EnvConditions): Trajectory {
   const rho = airDensity(env);
   const wind = windVector(env);
-  const ctx: AeroContext = { rho, wind };
+  const ctx: AeroContext =
+    env.coriolisLatDeg !== undefined
+      ? { rho, wind, coriolisLatDeg: env.coriolisLatDeg }
+      : { rho, wind };
 
   const derivs: Derivs = (s) => ({
     dpos: s.vel,

@@ -12,6 +12,7 @@ import { Scene } from './scene/Scene';
 import { UnitsToggle } from './controls/UnitsToggle';
 import { ModeToggle } from './controls/ModeToggle';
 import { SaveShotButton } from './controls/SaveShotButton';
+import { ShareLinkButton } from './controls/ShareLinkButton';
 
 export function App() {
   const mode = useShotStore((s) => s.mode);
@@ -22,6 +23,9 @@ export function App() {
         <div className="app-header-controls">
           <ModeToggle />
           <UnitsToggle />
+        </div>
+        <div className="app-header-controls">
+          <ShareLinkButton />
           <SaveShotButton />
         </div>
       </header>

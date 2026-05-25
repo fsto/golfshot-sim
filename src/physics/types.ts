@@ -30,7 +30,7 @@ export interface EnvConditions {
   windDirDeg: number;     // 0 = wind FROM 0° (north). Convention: heading the wind blows TOWARD = windDirDeg + 180. We use FROM here, standard meteorology.
   /** Ground material where the ball lands. Controls bounce/roll. */
   surface: Surface;
-  coriolisLatDeg?: number; // optional latitude in degrees; if undefined, Coriolis is off
+  coriolisLatDeg?: number | undefined; // optional latitude in degrees; if undefined, Coriolis is off
 }
 
 /** Mode A: pure ball-flight inputs (radar-style). */

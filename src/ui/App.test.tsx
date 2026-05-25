@@ -46,6 +46,21 @@ describe('App smoke', () => {
     expect(num('Total')).toBeGreaterThan(num('Carry'));
   });
 
+  test('Coriolis toggle is unchecked by default; checking it reveals Latitude field', () => {
+    render(<App />);
+    const cb = screen.getByRole('checkbox', { name: /Coriolis/i }) as HTMLInputElement;
+    expect(cb.checked).toBe(false);
+    expect(screen.queryByText(/Latitude/)).toBeNull();
+    fireEvent.click(cb);
+    expect(cb.checked).toBe(true);
+    expect(screen.getByText(/Latitude/)).toBeInTheDocument();
+  });
+
+  test('Share link button is in the header', () => {
+    render(<App />);
+    expect(screen.getByRole('button', { name: /Copy Link/i })).toBeInTheDocument();
+  });
+
   test('Dispersion panel renders with σ sliders and Run button', () => {
     render(<App />);
     expect(screen.getByText('Dispersion (Monte-Carlo)')).toBeInTheDocument();
