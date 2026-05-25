@@ -304,6 +304,12 @@ body {
   color: var(--accent);
 }
 .stat-unit { color: var(--fg-muted); font-size: 12px; }
+.stat-hint {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-muted);
+}
 
 .scene {
   background: linear-gradient(to bottom, #1a2a3a 0%, #0f1218 100%);

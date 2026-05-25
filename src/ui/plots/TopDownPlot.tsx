@@ -100,6 +100,8 @@ export function TopDownPlot() {
             label={{ value: `Distance (${distanceUnit(units)})`, position: 'insideBottom', offset: -10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
+            tickFormatter={(v: number) => Math.round(v).toString()}
+            allowDecimals={false}
           />
           <YAxis
             type="number"
@@ -107,6 +109,8 @@ export function TopDownPlot() {
             label={{ value: `Lateral (${distanceUnit(units)})`, angle: -90, position: 'insideLeft', offset: 10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
+            tickFormatter={(v: number) => Math.round(v).toString()}
+            allowDecimals={false}
           />
           <ReferenceLine y={0} stroke="#3d8a4a" strokeDasharray="2 4" opacity={0.7} />
           <Tooltip

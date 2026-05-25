@@ -13,11 +13,18 @@ export type Units = 'imperial' | 'metric';
 
 /** Dispersion configuration: per-field σ in input-field units, plus N and seed. */
 export interface DispersionConfig {
+  // Launch-mode sigmas
   ballSpeedMps: number;
   launchAngleDeg: number;
+  azimuthDeg: number;
+  backspinRpm: number;
   spinAxisDeg: number;
-  faceAngleDeg: number;
+  // Delivery-mode sigmas
   clubSpeedMps: number;
+  attackAngleDeg: number;
+  clubPathDeg: number;
+  faceAngleDeg: number;
+  // Common
   n: number;
   seed: number;
 }
@@ -25,9 +32,13 @@ export interface DispersionConfig {
 const DEFAULT_DISPERSION: DispersionConfig = {
   ballSpeedMps: 1.0,
   launchAngleDeg: 0.5,
+  azimuthDeg: 0.5,
+  backspinRpm: 150,
   spinAxisDeg: 3,
-  faceAngleDeg: 1.0,
   clubSpeedMps: 1.0,
+  attackAngleDeg: 0.5,
+  clubPathDeg: 1.0,
+  faceAngleDeg: 1.0,
   n: 100,
   seed: 1,
 };
@@ -84,7 +95,7 @@ const DEFAULT_ENV: EnvConditions = {
 };
 
 export const useShotStore = create<ShotStore>((set) => ({
-  mode: 'launch',
+  mode: 'delivery',
   units: 'imperial',
   launch: DEFAULT_LAUNCH,
   delivery: DEFAULT_DELIVERY,
@@ -110,7 +121,7 @@ export const useShotStore = create<ShotStore>((set) => ({
     set((s) => ({ dispersion: { ...s.dispersion, ...patch } })),
   reset: () =>
     set({
-      mode: 'launch',
+      mode: 'delivery',
       units: 'imperial',
       launch: DEFAULT_LAUNCH,
       delivery: DEFAULT_DELIVERY,

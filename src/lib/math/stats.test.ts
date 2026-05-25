@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { mean, covariance2D, ellipseFromCovariance } from './stats';
+import { mean, stddev, covariance2D, ellipseFromCovariance } from './stats';
 import { makeRng, gaussian } from './rng';
 
 const close = (a: number, b: number, tol: number) => expect(Math.abs(a - b)).toBeLessThan(tol);
@@ -10,6 +10,16 @@ describe('mean', () => {
   });
   test('empty array returns 0', () => {
     expect(mean([])).toBe(0);
+  });
+});
+
+describe('stddev (population)', () => {
+  test('zero for empty or constant array', () => {
+    expect(stddev([])).toBe(0);
+    expect(stddev([3, 3, 3, 3])).toBe(0);
+  });
+  test('matches known value: stddev of [1,2,3,4,5] = √2', () => {
+    close(stddev([1, 2, 3, 4, 5]), Math.sqrt(2), 1e-9);
   });
 });
 

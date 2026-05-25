@@ -19,8 +19,8 @@ export function ClubDeliveryForm() {
       <NumericField
         label="Club speed"
         value={speedDisplay(delivery.clubSpeedMps, units)}
-        min={units === 'imperial' ? 40 : 18}
-        max={units === 'imperial' ? 140 : 65}
+        min={40}
+        max={140}
         step={0.1}
         decimals={1}
         unit={speedUnit(units)}

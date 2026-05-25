@@ -5,6 +5,14 @@ export function mean(xs: number[]): number {
   return s / xs.length;
 }
 
+export function stddev(xs: number[]): number {
+  if (xs.length === 0) return 0;
+  const m = mean(xs);
+  let s = 0;
+  for (const x of xs) s += (x - m) * (x - m);
+  return Math.sqrt(s / xs.length);
+}
+
 export interface Cov2D {
   /** var(x) */
   sxx: number;

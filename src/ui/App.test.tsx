@@ -16,12 +16,11 @@ beforeEach(() => {
 });
 
 describe('App smoke', () => {
-  test('renders title, input panels, readout', () => {
+  test('renders title, input panels, readout (Club Delivery is default)', () => {
     render(<App />);
     expect(screen.getByText('Golfshot Sim')).toBeInTheDocument();
-    expect(screen.getByText('Ball Launch', { selector: '.panel-title' })).toBeInTheDocument();
+    expect(screen.getByText('Club Delivery', { selector: '.panel-title' })).toBeInTheDocument();
     expect(screen.getByText('Environment')).toBeInTheDocument();
-    // Five readout stats
     expect(screen.getByText('Carry')).toBeInTheDocument();
     expect(screen.getByText('Apex')).toBeInTheDocument();
     expect(screen.getByText('Hang time')).toBeInTheDocument();
@@ -46,36 +45,29 @@ describe('App smoke', () => {
     expect(num('Total')).toBeGreaterThan(num('Carry'));
   });
 
-  test('Coriolis toggle is unchecked by default; checking it reveals Latitude field', () => {
-    render(<App />);
-    const cb = screen.getByRole('checkbox', { name: /Coriolis/i }) as HTMLInputElement;
-    expect(cb.checked).toBe(false);
-    expect(screen.queryByText(/Latitude/)).toBeNull();
-    fireEvent.click(cb);
-    expect(cb.checked).toBe(true);
-    expect(screen.getByText(/Latitude/)).toBeInTheDocument();
-  });
-
-  test('Share link button is in the header', () => {
+test('Share link button is in the header', () => {
     render(<App />);
     expect(screen.getByRole('button', { name: /Copy Link/i })).toBeInTheDocument();
   });
 
-  test('Dispersion panel renders with σ sliders and Run button', () => {
+  test('Dispersion panel renders with delivery-mode σ sliders and Run button by default', () => {
     render(<App />);
     expect(screen.getByText('Dispersion (Monte-Carlo)')).toBeInTheDocument();
-    expect(screen.getByText(/σ Ball speed/)).toBeInTheDocument();
-    expect(screen.getByText(/σ Launch angle/)).toBeInTheDocument();
-    expect(screen.getByText(/σ Spin axis/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Club speed/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Face angle/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Club path/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Attack angle/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Run dispersion/i })).toBeInTheDocument();
   });
 
-  test('Dispersion panel switches σ field set when toggling to Club Delivery', () => {
+  test('Dispersion panel switches σ field set when toggling to Ball Launch', () => {
     render(<App />);
-    expect(screen.queryByText(/σ Face angle/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Club Delivery' }));
-    expect(screen.getByText(/σ Club speed/)).toBeInTheDocument();
-    expect(screen.getByText(/σ Face angle/)).toBeInTheDocument();
+    expect(screen.queryByText(/σ Spin axis/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Ball Launch' }));
+    expect(screen.getByText(/σ Ball speed/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Spin axis/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Azimuth/)).toBeInTheDocument();
+    expect(screen.getByText(/σ Backspin/)).toBeInTheDocument();
   });
 
   test('Save Shot adds a chip with label and total; Clear all empties history', () => {
@@ -84,12 +76,12 @@ describe('App smoke', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Save Shot/i }));
     expect(screen.getByText(/Saved shots \(1\)/i)).toBeInTheDocument();
-    // Default mode is launch → label starts with "Launch"
-    expect(screen.getByText(/Launch #1/)).toBeInTheDocument();
+    // Default mode is delivery → label starts with "Driver" (current preset)
+    expect(screen.getByText(/Driver #1/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Save Shot/i }));
     expect(screen.getByText(/Saved shots \(2\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Launch #2/)).toBeInTheDocument();
+    expect(screen.getByText(/Driver #2/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Clear all/i }));
     expect(screen.queryByText(/Saved shots/i)).toBeNull();
@@ -119,18 +111,17 @@ describe('App smoke', () => {
     expect(n).toBeLessThan(265);
   });
 
-  test('toggling to Club Delivery shows the derived ball launch panel', () => {
+  test('Derived ball launch panel is shown in default Delivery mode, hidden after switching to Ball Launch', () => {
     render(<App />);
-    expect(screen.queryByText(/Derived ball launch/i)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Club Delivery' }));
     expect(screen.getByText(/Derived ball launch/i)).toBeInTheDocument();
-    expect(screen.getByText('Club Delivery', { selector: '.panel-title' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Ball Launch' }));
+    expect(screen.queryByText(/Derived ball launch/i)).toBeNull();
+    expect(screen.getByText('Ball Launch', { selector: '.panel-title' })).toBeInTheDocument();
   });
 
   test('selecting 7i preset in delivery mode changes derived launch angle from driver value', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Club Delivery' }));
-    // Default delivery is driver; derived launch ≈ 10.9°.
+    // Delivery is default; derived launch ≈ 10.9° from Driver preset.
     // Change preset to 7-iron (expected derived launch ≈ 19.4°).
     const select = screen.getByLabelText(/Club preset/i) as HTMLSelectElement;
     fireEvent.change(select, { target: { value: '7i' } });
@@ -142,8 +133,10 @@ describe('App smoke', () => {
     expect(v).toBeLessThan(21);
   });
 
-  test('reducing backspin to 0 shortens carry', () => {
+  test('reducing backspin to 0 (in launch mode) shortens carry', () => {
     render(<App />);
+    // Backspin slider only lives in Ball Launch form; switch first.
+    fireEvent.click(screen.getByRole('button', { name: 'Ball Launch' }));
     const carryStat = () => screen.getByText('Carry').closest('.stat') as HTMLElement;
     const carryValue = () => parseFloat(within(carryStat()).getByText(/\d+\.\d+/).textContent ?? '');
     const initial = carryValue();

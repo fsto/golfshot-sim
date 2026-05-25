@@ -46,9 +46,17 @@ export function Scene() {
           target={[80, 8, 0]}
           enableDamping
           dampingFactor={0.1}
+          enablePan
+          enableZoom
+          enableRotate
+          screenSpacePanning
+          panSpeed={1.2}
+          zoomSpeed={1.1}
+          rotateSpeed={0.9}
           maxPolarAngle={Math.PI / 2 - 0.02}   // can't go under ground
-          minDistance={5}
-          maxDistance={400}
+          minDistance={2}
+          maxDistance={600}
+          keys={{ LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' }}
         />
       </Canvas>
     </div>

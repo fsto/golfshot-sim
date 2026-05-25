@@ -16,8 +16,8 @@ export function BallLaunchForm() {
       <NumericField
         label="Ball speed"
         value={speedDisplay(launch.ballSpeedMps, units)}
-        min={units === 'imperial' ? 60 : 27}
-        max={units === 'imperial' ? 200 : 90}
+        min={60}
+        max={200}
         step={0.1}
         decimals={1}
         unit={speedUnit(units)}

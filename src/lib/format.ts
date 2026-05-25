@@ -7,12 +7,15 @@ import {
 } from '../physics/units';
 import type { Units } from '../state/shotStore';
 
-// Speed (m/s ↔ mph)
-export const speedDisplay = (mps: number, u: Units): number =>
-  u === 'imperial' ? mpsToMph(mps) : mps;
-export const speedFromDisplay = (val: number, u: Units): number =>
-  u === 'imperial' ? mphToMps(val) : val;
-export const speedUnit = (u: Units): string => (u === 'imperial' ? 'mph' : 'm/s');
+/**
+ * Speed (club / ball / wind) is always displayed in mph regardless of units toggle.
+ * Trackman and every launch monitor we'd want to interop with reports clubhead and ball
+ * speed in mph even on metric setups, so flipping speeds with the units toggle would just
+ * confuse Trackman-literate users. Distance still flips yd ↔ m.
+ */
+export const speedDisplay = (mps: number, _u: Units): number => mpsToMph(mps);
+export const speedFromDisplay = (val: number, _u: Units): number => mphToMps(val);
+export const speedUnit = (_u: Units): string => 'mph';
 
 // Long distance (m ↔ yd)
 export const distanceDisplay = (m: number, u: Units): number =>

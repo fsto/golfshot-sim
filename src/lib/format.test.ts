@@ -43,10 +43,11 @@ describe('format helpers — imperial', () => {
 });
 
 describe('format helpers — metric', () => {
-  test('speed is identity in m/s', () => {
-    approx(speedDisplay(33.5, 'metric'), 33.5);
-    approx(speedFromDisplay(33.5, 'metric'), 33.5);
-    expect(speedUnit('metric')).toBe('m/s');
+  test('speed stays in mph even under metric (Trackman convention)', () => {
+    // 33.5 m/s = 74.94 mph
+    approx(speedDisplay(33.5, 'metric'), 33.5 / 0.44704, 1e-6);
+    approx(speedFromDisplay(74.94, 'metric'), 74.94 * 0.44704, 1e-3);
+    expect(speedUnit('metric')).toBe('mph');
   });
 
   test('distance identity in meters', () => {

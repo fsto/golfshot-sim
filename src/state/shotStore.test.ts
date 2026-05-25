@@ -6,9 +6,9 @@ describe('shotStore', () => {
     useShotStore.getState().reset();
   });
 
-  test('default mode is launch and units is imperial', () => {
+  test('default mode is delivery and units is imperial', () => {
     const s = useShotStore.getState();
-    expect(s.mode).toBe('launch');
+    expect(s.mode).toBe('delivery');
     expect(s.units).toBe('imperial');
   });
 
@@ -95,8 +95,8 @@ describe('shotStore', () => {
 
   test('setMode toggles which input drives the shot', () => {
     const { setMode } = useShotStore.getState();
-    expect(useShotStore.getState().mode).toBe('launch');
-    setMode('delivery');
     expect(useShotStore.getState().mode).toBe('delivery');
+    setMode('launch');
+    expect(useShotStore.getState().mode).toBe('launch');
   });
 });

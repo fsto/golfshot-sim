@@ -24,12 +24,15 @@ export function DispersionPanel() {
         ? {
             ballSpeedMps: cfg.ballSpeedMps,
             launchAngleDeg: cfg.launchAngleDeg,
+            azimuthDeg: cfg.azimuthDeg,
+            backspinRpm: cfg.backspinRpm,
             spinAxisDeg: cfg.spinAxisDeg,
           }
         : {
             clubSpeedMps: cfg.clubSpeedMps,
+            attackAngleDeg: cfg.attackAngleDeg,
+            clubPathDeg: cfg.clubPathDeg,
             faceAngleDeg: cfg.faceAngleDeg,
-            ballSpeedMps: 0,
           };
     run(sigmas, cfg.n, cfg.seed);
   };
@@ -44,7 +47,7 @@ export function DispersionPanel() {
             label="σ Ball speed"
             value={speedDisplay(cfg.ballSpeedMps, units)}
             min={0}
-            max={units === 'imperial' ? 10 : 4.5}
+            max={10}
             step={0.1}
             decimals={1}
             unit={speedUnit(units)}
@@ -59,6 +62,26 @@ export function DispersionPanel() {
             decimals={1}
             unit="°"
             onChange={(v) => update({ launchAngleDeg: v })}
+          />
+          <NumericField
+            label="σ Azimuth (start dir)"
+            value={cfg.azimuthDeg}
+            min={0}
+            max={5}
+            step={0.1}
+            decimals={1}
+            unit="°"
+            onChange={(v) => update({ azimuthDeg: v })}
+          />
+          <NumericField
+            label="σ Backspin"
+            value={cfg.backspinRpm}
+            min={0}
+            max={800}
+            step={10}
+            decimals={0}
+            unit="rpm"
+            onChange={(v) => update({ backspinRpm: v })}
           />
           <NumericField
             label="σ Spin axis"
@@ -77,11 +100,31 @@ export function DispersionPanel() {
             label="σ Club speed"
             value={speedDisplay(cfg.clubSpeedMps, units)}
             min={0}
-            max={units === 'imperial' ? 8 : 3.5}
+            max={8}
             step={0.1}
             decimals={1}
             unit={speedUnit(units)}
             onChange={(v) => update({ clubSpeedMps: speedFromDisplay(v, units) })}
+          />
+          <NumericField
+            label="σ Attack angle"
+            value={cfg.attackAngleDeg}
+            min={0}
+            max={5}
+            step={0.1}
+            decimals={1}
+            unit="°"
+            onChange={(v) => update({ attackAngleDeg: v })}
+          />
+          <NumericField
+            label="σ Club path"
+            value={cfg.clubPathDeg}
+            min={0}
+            max={6}
+            step={0.1}
+            decimals={1}
+            unit="°"
+            onChange={(v) => update({ clubPathDeg: v })}
           />
           <NumericField
             label="σ Face angle"

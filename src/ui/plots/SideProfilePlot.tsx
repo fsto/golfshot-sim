@@ -84,6 +84,8 @@ export function SideProfilePlot() {
             label={{ value: `Distance (${distanceUnit(units)})`, position: 'insideBottom', offset: -10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
+            tickFormatter={(v: number) => Math.round(v).toString()}
+            allowDecimals={false}
           />
           <YAxis
             type="number"
@@ -91,6 +93,8 @@ export function SideProfilePlot() {
             label={{ value: `Height (${shortDistanceUnit(units)})`, angle: -90, position: 'insideLeft', offset: 10, fill: '#9aa3b2' }}
             stroke="#9aa3b2"
             tick={{ fontSize: 11 }}
+            tickFormatter={(v: number) => Math.round(v).toString()}
+            allowDecimals={false}
           />
           <Tooltip
             contentStyle={{ background: '#1a1f2a', border: '1px solid #2a2f3a', color: '#e6ebf4' }}
